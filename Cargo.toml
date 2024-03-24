@@ -1,7 +1,4 @@
-[package]
-name = "llvm2yul"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
 
-[dependencies]
-llvm-ir = { version = "0.11.0", features = ["llvm-17"] }
+members = ["llvm2yul", "yuler"]
