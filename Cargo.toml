@@ -2,3 +2,8 @@
 resolver = "2"
 
 members = ["llvm2yul", "yuler"]
+
+[workspace.dependencies]
+yuler = { version = "0.1", path = "./yuler" }
+
+anyhow = "1.0.81"

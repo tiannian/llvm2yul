@@ -4,4 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+yuler.workspace = true
+
+anyhow.workspace = true
+
 llvm-ir = { version = "0.11.0", features = ["llvm-17"] }
+llvm-ir-analysis = { version = "0.4.0", features = ["llvm-17"] }
+log = "0.4.21"

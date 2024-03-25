@@ -17,6 +17,15 @@ pub struct Data {
 }
 
 impl Object {
+    pub fn new(name: Ident) -> Self {
+        Self {
+            name,
+            code: Block(Vec::new()),
+            data: Vec::new(),
+            objects: Vec::new(),
+        }
+    }
+
     pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
     where
         W: Write,
