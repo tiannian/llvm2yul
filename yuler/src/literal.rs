@@ -2,6 +2,7 @@ use std::io::Write;
 
 use anyhow::{anyhow, Result};
 use lazy_static::lazy_static;
+use literals::{ASCIILiteral, NumberLiteral};
 use regex::Regex;
 
 lazy_static! {
@@ -10,10 +11,10 @@ lazy_static! {
     static ref HEX_NUMBER_LITERAL: Regex = Regex::new(r"^0x[0-9A-Fa-f]+$").unwrap();
 }
 
+#[derive(Debug, Clone)]
 pub enum Literal {
     Number(NumberLiteral),
     ASCII(ASCIILiteral),
-    Hex(HexLiteral),
 }
 
 impl Literal {
@@ -43,28 +44,64 @@ impl Literal {
         Ok(Self::ASCII(ASCIILiteral(s)))
     }
 
-    pub fn hex_data(s: impl Into<String>) -> Result<Self> {
+    pub fn write(&self, w: &mut impl Write) -> Result<()> {
+        match self {
+            Self::Number(v) => v.write(w),
+            Self::ASCII(v) => v.write(w),
+        }
+    }
+}
+
+pub mod literals {
+    use std::io::Write;
+
+    use anyhow::Result;
+
+    #[derive(Debug, Clone)]
+    pub struct NumberLiteral(pub(crate) String);
+
+    impl NumberLiteral {
+        pub fn write(&self, w: &mut impl Write) -> Result<()> {
+            w.write_all(self.0.as_bytes())?;
+            Ok(())
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct ASCIILiteral(pub(crate) String);
+
+    impl ASCIILiteral {
+        pub fn write(&self, w: &mut impl Write) -> Result<()> {
+            w.write_fmt(format_args!("\"{}\"", self.0))?;
+            Ok(())
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct HexLiteral(pub(crate) String);
+
+impl HexLiteral {
+    pub fn new(s: impl Into<String>) -> Result<Self> {
         let s = s.into();
 
         if HEX_LITERAL.is_match(&s) {
-            Ok(Self::Hex(HexLiteral(s)))
+            Ok(HexLiteral(s))
         } else {
             Err(anyhow!("Wrong format of number"))
         }
     }
 
     pub fn write(&self, w: &mut impl Write) -> Result<()> {
-        match self {
-            Self::Number(v) => v.write(w),
-            Self::Hex(v) => v.write(w),
-            Self::ASCII(v) => v.write(w),
-        }
+        w.write_fmt(format_args!("hex\"{}\"", self.0))?;
+        Ok(())
     }
 }
 
-pub struct NumberLiteral(pub(crate) String);
+#[derive(Debug, Clone)]
+pub struct Ident(pub String);
 
-impl NumberLiteral {
+impl Ident {
     pub fn new(s: impl Into<String>) -> Result<Self> {
         Ok(Self(s.into()))
     }
@@ -75,49 +112,9 @@ impl NumberLiteral {
     }
 }
 
-pub struct ASCIILiteral(pub(crate) String);
-
-impl ASCIILiteral {
-    pub fn new(s: impl Into<String>) -> Result<Self> {
-        Ok(Self(s.into()))
-    }
-
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
-        w.write_fmt(format_args!("\"{}\"", self.0))?;
-        Ok(())
-    }
-}
-
-pub struct HexLiteral(pub(crate) String);
-
-impl HexLiteral {
-    pub fn new(s: impl Into<String>) -> Result<Self> {
-        let s = s.into();
-
-        if s.len() % 2 == 0 && HEX_LITERAL.is_match(&s) {
-            Ok(Self(s))
-        } else {
-            Err(anyhow!("Wrong format of hex string"))
-        }
-    }
-
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
-        w.write_fmt(format_args!("hex\"{}\"", self.0))?;
-        Ok(())
-    }
-}
-
-pub struct Ident(pub String);
-
-impl Ident {
-    pub fn new(s: impl Into<String>) -> Result<Self> {
-        Ok(Self(s.into()))
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::Literal;
+    use crate::{HexLiteral, Literal};
 
     #[test]
     fn test_number() {
@@ -154,7 +151,7 @@ mod tests {
 
     #[test]
     fn test_hex() {
-        let number = Literal::hex_data("abcd").unwrap();
+        let number = HexLiteral::new("abcd").unwrap();
 
         let mut res = Vec::new();
 

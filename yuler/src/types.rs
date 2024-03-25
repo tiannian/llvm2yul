@@ -1,14 +1,4 @@
-use crate::{Ident, Literal};
-
-pub enum Value {
-    Literal(Literal),
-    FunctionCall(FunctionCall),
-}
-
-pub struct FunctionCall {
-    pub name: Ident,
-    pub args: Vec<Value>,
-}
+use crate::{Assignment, FunctionCall, Ident, Literal, Value, VariableDeclare};
 
 pub enum Statement {
     VariableDeclare(VariableDeclare),
@@ -20,16 +10,6 @@ pub enum Statement {
     Leave,
     ForLoop(ForLoop),
     FunctionDefinition(FunctionDefinition),
-}
-
-pub struct VariableDeclare {
-    pub names: Vec<Ident>,
-    pub value: Value,
-}
-
-pub struct Assignment {
-    pub names: Vec<Ident>,
-    pub value: Value,
 }
 
 pub struct Block(pub Vec<Statement>);
