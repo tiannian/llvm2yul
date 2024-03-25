@@ -3,10 +3,10 @@ pub use literal::*;
 
 // mod builtin;
 // pub use builtin::*;
-//
-// mod object;
-// pub use object::*;
-//
+
+mod object;
+pub use object::*;
+
 mod value;
 pub use value::*;
 
@@ -30,6 +30,9 @@ pub use function_declare::*;
 
 mod statement;
 pub use statement::*;
+
+mod ident;
+pub use ident::*;
 
 mod writer;
 pub use writer::*;
