@@ -1,3 +1,3 @@
 # LLVM IR to Yul
 
-> Convertor between LLVM and Yul
+> Convertor from LLVM to Yul
