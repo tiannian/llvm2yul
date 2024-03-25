@@ -3,8 +3,7 @@ use std::io::Write;
 use anyhow::Result;
 
 use crate::{
-    Assignment, Block, ForLoop, FunctionCall, Ident, If, Literal, Switch, Value, VariableDeclare,
-    Writer,
+    Assignment, ForLoop, FunctionCall, FunctionDefinition, If, Switch, VariableDeclare, Writer,
 };
 
 #[derive(Debug, Clone)]
@@ -21,41 +20,23 @@ pub enum Statement {
     FunctionDefinition(FunctionDefinition),
 }
 
-impl From<VariableDeclare> for Statement {
-    fn from(value: VariableDeclare) -> Self {
-        Self::VariableDeclare(value)
-    }
+macro_rules! define_impl {
+    ($t:ty, $e:ident) => {
+        impl From<$e> for $t {
+            fn from(value: $e) -> Self {
+                Self::$e(value)
+            }
+        }
+    };
 }
 
-impl From<Assignment> for Statement {
-    fn from(value: Assignment) -> Self {
-        Self::Assignment(value)
-    }
-}
-
-impl From<FunctionCall> for Statement {
-    fn from(value: FunctionCall) -> Self {
-        Self::FunctionCall(value)
-    }
-}
-
-impl From<If> for Statement {
-    fn from(value: If) -> Self {
-        Self::If(value)
-    }
-}
-
-impl From<Switch> for Statement {
-    fn from(value: Switch) -> Self {
-        Self::Switch(value)
-    }
-}
-
-impl From<ForLoop> for Statement {
-    fn from(value: ForLoop) -> Self {
-        Self::ForLoop(value)
-    }
-}
+define_impl!(Statement, VariableDeclare);
+define_impl!(Statement, Assignment);
+define_impl!(Statement, FunctionCall);
+define_impl!(Statement, If);
+define_impl!(Statement, Switch);
+define_impl!(Statement, ForLoop);
+define_impl!(Statement, FunctionDefinition);
 
 impl Statement {
     pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
@@ -72,23 +53,9 @@ impl Statement {
             Self::Continue => w.write_str("continue")?,
             Self::Leave => w.write_str("leave")?,
             Self::ForLoop(v) => v.write(w)?,
-            _ => {}
+            Self::FunctionDefinition(v) => v.write(w)?,
         }
 
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct FunctionDefinition {
-    pub name: Ident,
-    pub args: Vec<Ident>,
-    pub rets: Vec<Ident>,
-    pub block: Block,
-}
-
-impl FunctionDefinition {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
         Ok(())
     }
 }
@@ -99,6 +66,7 @@ pub(crate) mod stmt_tests {
 
     use crate::{
         for_loop_tests::build_for_loop,
+        function_defination_tests::build_function_defination,
         value_tests::build_fc,
         variable_tests::{build_as, build_vd},
         Block, CaseBlock, If, Literal, Statement, Switch, Value, Writer,
@@ -144,6 +112,7 @@ pub(crate) mod stmt_tests {
         let iff: Statement = build_if()?.into();
         let sw: Statement = build_switch()?.into();
         let fl: Statement = build_for_loop()?.into();
+        let fd: Statement = build_function_defination()?.into();
 
         let block = Block(vec![
             iff,
@@ -152,6 +121,7 @@ pub(crate) mod stmt_tests {
             Statement::Leave,
             sw,
             fl,
+            fd,
         ]);
 
         let mut res = Writer::new(Vec::new(), "    ");

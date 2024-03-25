@@ -25,6 +25,9 @@ pub use switch::*;
 mod block;
 pub use block::*;
 
+mod function_declare;
+pub use function_declare::*;
+
 mod statement;
 pub use statement::*;
 
