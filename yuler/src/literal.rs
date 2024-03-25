@@ -5,6 +5,8 @@ use lazy_static::lazy_static;
 use literals::{ASCIILiteral, NumberLiteral};
 use regex::Regex;
 
+use crate::Writer;
+
 lazy_static! {
     static ref HEX_LITERAL: Regex = Regex::new(r"^[0-9A-Fa-f]+$").unwrap();
     static ref INT_LITERAL: Regex = Regex::new(r"^-?[0-9]+$").unwrap();
@@ -106,8 +108,11 @@ impl Ident {
         Ok(Self(s.into()))
     }
 
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
-        w.write_all(self.0.as_bytes())?;
+    pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
+    where
+        W: Write,
+    {
+        w.write_str(&self.0)?;
         Ok(())
     }
 }

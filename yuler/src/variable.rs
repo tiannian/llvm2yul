@@ -2,7 +2,7 @@ use std::io::Write;
 
 use anyhow::Result;
 
-use crate::{Ident, Value};
+use crate::{Ident, Value, Writer};
 
 #[derive(Debug, Clone)]
 pub struct VariableDeclare {
@@ -11,22 +11,25 @@ pub struct VariableDeclare {
 }
 
 impl VariableDeclare {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
-        w.write_all(b"let ")?;
+    pub fn write<W>(&self, writer: &mut Writer<W>) -> Result<()>
+    where
+        W: Write,
+    {
+        writer.write_str("let ")?;
         let skip = self.names.len();
 
         for (i, v) in self.names.iter().enumerate() {
-            v.write(w)?;
+            v.write(writer)?;
 
             if skip == i + 1 {
                 break;
             }
 
-            w.write_all(b", ")?;
+            writer.write_str(", ")?;
         }
 
-        w.write_all(b" := ")?;
-        self.value.write(w)?;
+        writer.write_str(" := ")?;
+        self.value.write(writer)?;
 
         Ok(())
     }
@@ -39,21 +42,24 @@ pub struct Assignment {
 }
 
 impl Assignment {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
+    pub fn write<W>(&self, writer: &mut Writer<W>) -> Result<()>
+    where
+        W: Write,
+    {
         let skip = self.names.len();
 
         for (i, v) in self.names.iter().enumerate() {
-            v.write(w)?;
+            v.write(writer)?;
 
             if skip == i + 1 {
                 break;
             }
 
-            w.write_all(b", ")?;
+            writer.write_str(", ")?;
         }
 
-        w.write_all(b" := ")?;
-        self.value.write(w)?;
+        writer.write_str(" := ")?;
+        self.value.write(writer)?;
 
         Ok(())
     }
@@ -63,7 +69,7 @@ impl Assignment {
 pub(crate) mod variable_tests {
     use anyhow::Result;
 
-    use crate::{Assignment, FunctionCall, Ident, VariableDeclare};
+    use crate::{Assignment, FunctionCall, Ident, VariableDeclare, Writer};
 
     pub(crate) fn build_vd() -> Result<VariableDeclare> {
         let ident = Ident::new("a")?;
@@ -83,10 +89,10 @@ pub(crate) mod variable_tests {
     fn test_vd() {
         let vd = build_vd().unwrap();
 
-        let mut res = Vec::new();
+        let mut res = Writer::new(Vec::new(), "    ");
         vd.write(&mut res).unwrap();
 
-        assert_eq!(res, b"let a, a := a()")
+        assert_eq!(res.w, b"let a, a := a()")
     }
 
     pub(crate) fn build_as() -> Result<Assignment> {
@@ -109,9 +115,9 @@ pub(crate) mod variable_tests {
     fn test_as() {
         let vd = build_as().unwrap();
 
-        let mut res = Vec::new();
+        let mut res = Writer::new(Vec::new(), "    ");
         vd.write(&mut res).unwrap();
 
-        assert_eq!(res, b"a, a := a()")
+        assert_eq!(res.w, b"a, a := a()")
     }
 }

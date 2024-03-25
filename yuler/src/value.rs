@@ -2,7 +2,7 @@ use std::io::Write;
 
 use anyhow::Result;
 
-use crate::{Ident, Literal};
+use crate::{Ident, Literal, Writer};
 
 #[derive(Debug, Clone)]
 pub enum Value {
@@ -23,9 +23,12 @@ impl From<FunctionCall> for Value {
 }
 
 impl Value {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
+    pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
+    where
+        W: Write,
+    {
         match self {
-            Self::Literal(v) => v.write(w),
+            Self::Literal(v) => v.write(&mut w.w),
             Self::FunctionCall(v) => v.write(w),
         }
     }
@@ -38,9 +41,12 @@ pub struct FunctionCall {
 }
 
 impl FunctionCall {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
+    pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
+    where
+        W: Write,
+    {
         self.name.write(w)?;
-        w.write_all(b"(")?;
+        w.write_str("(")?;
 
         let skip = self.args.len();
 
@@ -51,10 +57,10 @@ impl FunctionCall {
                 break;
             }
 
-            w.write_all(b", ")?;
+            w.write_str(", ")?;
         }
 
-        w.write_all(b")")?;
+        w.write_str(")")?;
 
         Ok(())
     }
@@ -64,7 +70,7 @@ impl FunctionCall {
 pub(crate) mod value_tests {
     use anyhow::Result;
 
-    use crate::{FunctionCall, Ident, Literal, Value};
+    use crate::{FunctionCall, Ident, Literal, Value, Writer};
 
     pub(crate) fn build_fc() -> Result<FunctionCall> {
         let v0 = Value::Literal(Literal::hex_number("0x1").unwrap());
@@ -92,7 +98,7 @@ pub(crate) mod value_tests {
             args: vec![v0.clone(), v1, v2, v3],
         };
 
-        let mut res = Vec::new();
+        let mut res = Writer::new(Vec::new(), "    ");
 
         let fc = FunctionCall {
             name: Ident::new("_test").unwrap(),
@@ -101,6 +107,6 @@ pub(crate) mod value_tests {
 
         fc.write(&mut res).unwrap();
 
-        assert_eq!(res, b"_test(0x1, _test(0x1, 0x2, 0x3, 0x4))")
+        assert_eq!(res.w, b"_test(0x1, _test(0x1, 0x2, 0x3, 0x4))")
     }
 }

@@ -2,7 +2,10 @@ use std::io::Write;
 
 use anyhow::Result;
 
-use crate::{Assignment, FunctionCall, Ident, Literal, Value, VariableDeclare};
+use crate::{
+    Assignment, Block, ForLoop, FunctionCall, Ident, If, Literal, Switch, Value, VariableDeclare,
+    Writer,
+};
 
 #[derive(Debug, Clone)]
 pub enum Statement {
@@ -10,6 +13,7 @@ pub enum Statement {
     Assignment(Assignment),
     FunctionCall(FunctionCall),
     If(If),
+    Switch(Switch),
     Break,
     Continue,
     Leave,
@@ -41,95 +45,36 @@ impl From<If> for Statement {
     }
 }
 
+impl From<Switch> for Statement {
+    fn from(value: Switch) -> Self {
+        Self::Switch(value)
+    }
+}
+
+impl From<ForLoop> for Statement {
+    fn from(value: ForLoop) -> Self {
+        Self::ForLoop(value)
+    }
+}
+
 impl Statement {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
+    pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
+    where
+        W: Write,
+    {
         match self {
             Self::VariableDeclare(v) => v.write(w)?,
             Self::Assignment(v) => v.write(w)?,
             Self::FunctionCall(v) => v.write(w)?,
             Self::If(v) => v.write(w)?,
-            Self::Break => w.write_all(b"break")?,
-            Self::Continue => w.write_all(b"continue")?,
-            Self::Leave => w.write_all(b"leave")?,
+            Self::Switch(v) => v.write(w)?,
+            Self::Break => w.write_str("break")?,
+            Self::Continue => w.write_str("continue")?,
+            Self::Leave => w.write_str("leave")?,
+            Self::ForLoop(v) => v.write(w)?,
             _ => {}
         }
 
-        w.write_all(b";")?;
-
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Block(pub Vec<Statement>);
-
-impl Block {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
-        w.write_all(b"{\n")?;
-
-        for v in &self.0 {
-            v.write(w)?;
-
-            w.write_all(b"\n")?;
-        }
-
-        w.write_all(b"}")?;
-
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct If {
-    pub cond: Value,
-    pub block: Block,
-}
-
-impl If {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
-        w.write_all(b"if ")?;
-        self.cond.write(w)?;
-        w.write_all(b" ")?;
-        self.block.write(w)?;
-
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct Switch {
-    pub cond: Value,
-    pub cases: Vec<CaseBlock>,
-    pub default: Option<Block>,
-}
-
-impl Switch {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct CaseBlock {
-    pub cond: Literal,
-    pub block: Block,
-}
-
-impl CaseBlock {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct ForLoop {
-    pub init: Option<Block>,
-    pub cond: Value,
-    pub incr: Option<Block>,
-}
-
-impl ForLoop {
-    pub fn write(&self, w: &mut impl Write) -> Result<()> {
         Ok(())
     }
 }
@@ -149,16 +94,17 @@ impl FunctionDefinition {
 }
 
 #[cfg(test)]
-mod stmt_tests {
+pub(crate) mod stmt_tests {
     use anyhow::Result;
 
     use crate::{
+        for_loop_tests::build_for_loop,
         value_tests::build_fc,
         variable_tests::{build_as, build_vd},
-        Assignment, Block, If, Statement, Value, VariableDeclare,
+        Block, CaseBlock, If, Literal, Statement, Switch, Value, Writer,
     };
 
-    fn build_block() -> Result<Block> {
+    pub fn build_block() -> Result<Block> {
         let vd: Statement = build_vd()?.into();
         let ass: Statement = build_as()?.into();
         let fc: Statement = build_fc()?.into();
@@ -175,16 +121,43 @@ mod stmt_tests {
         Ok(If { cond, block })
     }
 
+    fn build_switch() -> Result<Switch> {
+        let cast_cond = Literal::hex_number("0x01")?;
+        let block = build_block()?;
+        let case = CaseBlock {
+            cond: cast_cond,
+            block,
+        };
+
+        let cond: Value = build_fc()?.into();
+        let sw = Switch {
+            cond,
+            cases: vec![case],
+            default: None,
+        };
+
+        Ok(sw)
+    }
+
     #[test]
     fn test_cd_block() -> Result<()> {
         let iff: Statement = build_if()?.into();
+        let sw: Statement = build_switch()?.into();
+        let fl: Statement = build_for_loop()?.into();
 
-        let block = Block(vec![iff]);
+        let block = Block(vec![
+            iff,
+            Statement::Continue,
+            Statement::Break,
+            Statement::Leave,
+            sw,
+            fl,
+        ]);
 
-        let mut res = Vec::new();
+        let mut res = Writer::new(Vec::new(), "    ");
         block.write(&mut res)?;
 
-        let res = String::from_utf8(res).unwrap();
+        let res = String::from_utf8(res.w).unwrap();
         println!("{}", res);
 
         // println!("{:?}", String::from_utf8(res));
