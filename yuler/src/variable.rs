@@ -60,22 +60,28 @@ impl Assignment {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod variable_tests {
+    use anyhow::Result;
+
     use crate::{Assignment, FunctionCall, Ident, VariableDeclare};
 
-    #[test]
-    fn test_vd() {
-        let ident = Ident::new("a").unwrap();
+    pub(crate) fn build_vd() -> Result<VariableDeclare> {
+        let ident = Ident::new("a")?;
 
         let value = FunctionCall {
             name: ident.clone(),
             args: Vec::new(),
         };
 
-        let vd = VariableDeclare {
+        Ok(VariableDeclare {
             names: vec![ident.clone(), ident.clone()],
             value: value.into(),
-        };
+        })
+    }
+
+    #[test]
+    fn test_vd() {
+        let vd = build_vd().unwrap();
 
         let mut res = Vec::new();
         vd.write(&mut res).unwrap();
@@ -83,8 +89,7 @@ mod tests {
         assert_eq!(res, b"let a, a := a()")
     }
 
-    #[test]
-    fn test_as() {
+    pub(crate) fn build_as() -> Result<Assignment> {
         let ident = Ident::new("a").unwrap();
 
         let value = FunctionCall {
@@ -96,6 +101,13 @@ mod tests {
             names: vec![ident.clone(), ident.clone()],
             value: value.into(),
         };
+
+        Ok(vd)
+    }
+
+    #[test]
+    fn test_as() {
+        let vd = build_as().unwrap();
 
         let mut res = Vec::new();
         vd.write(&mut res).unwrap();

@@ -61,8 +61,24 @@ impl FunctionCall {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod value_tests {
+    use anyhow::Result;
+
     use crate::{FunctionCall, Ident, Literal, Value};
+
+    pub(crate) fn build_fc() -> Result<FunctionCall> {
+        let v0 = Value::Literal(Literal::hex_number("0x1").unwrap());
+        let v1 = Value::Literal(Literal::hex_number("0x2").unwrap());
+        let v2 = Value::Literal(Literal::hex_number("0x3").unwrap());
+        let v3 = Value::Literal(Literal::hex_number("0x4").unwrap());
+
+        let fc = FunctionCall {
+            name: Ident::new("_test").unwrap(),
+            args: vec![v0.clone(), v1, v2, v3],
+        };
+
+        Ok(fc)
+    }
 
     #[test]
     fn test_function_call() {
