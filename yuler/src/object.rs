@@ -1,7 +1,7 @@
-use crate::{Block, Literal};
+use crate::{Block, HexLiteral};
 
 pub struct Object {
     pub code: Block,
-    pub data: Literal,
+    pub data: HexLiteral,
     pub objects: Vec<Object>,
 }
