@@ -63,7 +63,6 @@ impl Compiler {
             }
         }
 
-        //
         _iter_functions(&mut functions, &call_graph, &entry);
 
         drop(call_graph);
