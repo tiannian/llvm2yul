@@ -36,7 +36,7 @@ fn u256(i: u32) -> u32 {
 #[no_mangle]
 pub extern "C" fn _entry() {
     let sender = unsafe { __yul_caller() };
-    let idx = u256(0);
+    let idx = u256(1);
     unsafe { __yul_sstore(idx, sender) };
 
     // deploy contract
