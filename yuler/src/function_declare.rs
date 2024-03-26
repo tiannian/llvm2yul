@@ -13,6 +13,15 @@ pub struct FunctionDefinition {
 }
 
 impl FunctionDefinition {
+    pub fn new(name: Ident) -> Self {
+        Self {
+            name,
+            args: Default::default(),
+            rets: Default::default(),
+            block: Default::default(),
+        }
+    }
+
     pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
     where
         W: Write,

@@ -28,22 +28,36 @@ extern "C" {
     pub fn __yul_revert(p: u32, o: u32);
 }
 
+// fn allocate(size: u32) -> u32 {
+//     let stack_base = u256(0x40);
+//
+//     size
+// }
+
 #[inline]
 fn u256(i: u32) -> u32 {
     unsafe { __yul__ext_literal(0, 0, 0, 0, 0, 0, 0, i) }
+}
+
+#[inline(never)]
+fn deploy_contract(p: extern "C" fn()) -> (u32, u32) {
+    let codeoffset = unsafe { __yul_dataoffset(p) };
+    let codesize = unsafe { __yul_datasize(p) };
+    let idx0 = u256(0);
+    unsafe { __yul_datacopy(idx0, codeoffset, codesize) };
+
+    (idx0, codesize)
 }
 
 #[no_mangle]
 pub extern "C" fn _entry() {
     let sender = unsafe { __yul_caller() };
     let idx = u256(1);
+
     unsafe { __yul_sstore(idx, sender) };
 
     // deploy contract
-    let codeoffset = unsafe { __yul_dataoffset(_deployed_entry) };
-    let codesize = unsafe { __yul_datasize(_deployed_entry) };
-    let idx0 = u256(0);
-    unsafe { __yul_datacopy(idx0, codeoffset, codesize) };
+    let (idx0, codesize) = deploy_contract(_deployed_entry);
 
     unsafe { __yul_return(idx0, codesize) };
 }
