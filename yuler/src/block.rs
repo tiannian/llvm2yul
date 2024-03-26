@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use crate::{Statement, Writer};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Block(pub Vec<Statement>);
 
 impl Block {
