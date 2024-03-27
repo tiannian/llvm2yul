@@ -1,4 +1,4 @@
-pub fn builtin_args(name: &str) -> Option<usize> {
+pub fn builtin_args_num(name: &str) -> Option<usize> {
     if name.len() < 5 {
         return None;
     }
@@ -99,5 +99,5 @@ pub fn builtin_args(name: &str) -> Option<usize> {
 }
 
 pub fn is_builtin(name: &str) -> bool {
-    builtin_args(name).is_some()
+    builtin_args_num(name).is_some()
 }

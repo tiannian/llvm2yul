@@ -4,11 +4,10 @@ use anyhow::{anyhow, Result};
 use llvm_ir::{
     function::Parameter, instruction::Call, BasicBlock, Function, Instruction, Module, Type,
 };
-use llvm_ir_analysis::{FunctionAnalysis, ModuleAnalysis};
+use llvm_ir_analysis::{CFGNode, FunctionAnalysis, ModuleAnalysis};
 use yuler::{Block, FunctionCall, FunctionDefinition, Ident, Object, Statement};
 
 use crate::{
-    is_builtin,
     utils::{self, build_list_by_type},
     Config,
 };
@@ -47,7 +46,7 @@ impl Compiler {
         let mut object = Object::new(name.clone());
 
         for func in &module.functions {
-            if functions.contains(&func.name) && !is_builtin(&func.name) || func.name == func_name {
+            if functions.contains(&func.name) || func.name == func_name {
                 log::info!("Compile function: {}", func.name);
                 let function = self.compile_function(func)?;
 
@@ -109,15 +108,23 @@ impl Compiler {
     }
 
     pub fn compile_function_body(&self, block: &mut Block, func: &Function) -> Result<()> {
-        // let function_analysis = FunctionAnalysis::new(func);
-        // let control_flow = function_analysis.control_flow_graph();
+        let function_analysis = FunctionAnalysis::new(func);
+        let control_flow = function_analysis.control_flow_graph();
 
-        let mut blocks = BTreeMap::new();
+        let entry_name = control_flow.entry();
 
-        for block in &func.basic_blocks {
-            let generated_block = self.compile_basic_block(block)?;
-            blocks.insert(block.name.clone(), generated_block);
-        }
+        // for block in &func.basic_blocks {
+        //     let it = control_flow.succs(&block.name);
+        //
+        //     let mut is_loop = false;
+        //     for i in it {
+        //         if i == CFGNode::Block(&block.name) {
+        //             is_loop = true;
+        //         }
+        //     }
+        //
+        //     let generated_block = self.compile_basic_block(block)?;
+        // }
 
         Ok(())
     }
@@ -133,21 +140,27 @@ impl Compiler {
     }
 
     pub fn compile_inst(&self, inst: &Instruction) -> Result<Vec<Statement>> {
-        let calls = Vec::new();
+        let mut calls = Vec::new();
 
         match inst {
-            // Instruction::Add(i) => {}
+            Instruction::Add(_i) => {}
             // Instruction::Sub(i) => {}
-            Instruction::Call(i) => {
-                log::debug!("{:#?}", i)
-            }
-            _ => return Err(anyhow!("Unspported instruction: {:?}", inst)),
+            Instruction::ICmp(_i) => {}
+            Instruction::Phi(_i) => {}
+            Instruction::Call(i) => calls.push(self.compile_call_inst(i)?.into()),
+            Instruction::InsertValue(_i) => {}
+            Instruction::ExtractValue(_i) => {}
+            _ => return Err(anyhow!("Unspported instruction: {}", inst)),
         }
 
         Ok(calls)
     }
 
-    // pub fn compile_call_inst(&self, call: Call) -> Result<FunctionCall> {
-    //     // let function_call = FunctionCall::n
-    // }
+    pub fn compile_call_inst(&self, call: &Call) -> Result<FunctionCall> {
+        let name = utils::build_call_function_name(&call)?;
+
+        let function_call = FunctionCall::new(name);
+
+        Ok(function_call)
+    }
 }
