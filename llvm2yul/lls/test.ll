@@ -4,21 +4,26 @@ target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:
 target triple = "x86_64-unknown-linux-gnu"
 
 ; Function Attrs: nounwind nonlazybind
-define void @main(i64 noundef %l) unnamed_addr #0 {
+define void @_entry(i64 noundef %l) unnamed_addr #0 {
 start:
-  %_82 = icmp sgt i64 %l, 1
-  br i1 %_82, label %bb3, label %bb5
+  %_122 = icmp sgt i64 %l, 1
+  br i1 %_122, label %bb5, label %bb7
 
-bb5:                                              ; preds = %bb3, %start
+bb7:                                              ; preds = %bb5, %start
   ret void
 
-bb3:                                              ; preds = %start, %bb3
-  %iter.sroa.0.03 = phi i64 [ %_0.i, %bb3 ], [ 1, %start ]
+bb5:                                              ; preds = %start, %bb5
+  %iter.sroa.0.03 = phi i64 [ %_0.i, %bb5 ], [ 1, %start ]
   %_0.i = add nuw nsw i64 %iter.sroa.0.03, 1
+  %_2.i = tail call noundef i64 @build_int() #1
   tail call void @test(i64 noundef %iter.sroa.0.03) #1
+  tail call void @test(i64 noundef %_2.i) #1
   %exitcond.not = icmp eq i64 %_0.i, %l
-  br i1 %exitcond.not, label %bb5, label %bb3
+  br i1 %exitcond.not, label %bb7, label %bb5
 }
+
+; Function Attrs: nounwind nonlazybind
+declare noundef i64 @build_int() unnamed_addr #0
 
 ; Function Attrs: nounwind nonlazybind
 declare void @test(i64 noundef) unnamed_addr #0

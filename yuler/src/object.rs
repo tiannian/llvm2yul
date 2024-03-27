@@ -49,6 +49,7 @@ impl Object {
             v.data.write(&mut w.w)?;
             w.write_end()?;
         }
+        w.write_end()?;
 
         w.leave_block();
         w.write_str("}")?;

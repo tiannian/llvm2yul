@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 use llvm_ir::{
     function::Parameter, instruction::Call, BasicBlock, Function, Instruction, Module, Type,
 };
-use llvm_ir_analysis::{CFGNode, FunctionAnalysis, ModuleAnalysis};
+use llvm_ir_analysis::{FunctionAnalysis, ModuleAnalysis};
 use yuler::{Block, FunctionCall, FunctionDefinition, Ident, Object, Statement};
 
 use crate::{
@@ -108,23 +108,32 @@ impl Compiler {
     }
 
     pub fn compile_function_body(&self, block: &mut Block, func: &Function) -> Result<()> {
+        let mut compiled_blocks = BTreeMap::new();
+        let mut origin_blocks = BTreeMap::new();
+
+        // Compile blocks
+        for block in &func.basic_blocks {
+            println!("{:#?}", block.term);
+
+            let compiled_block = self.compile_basic_block(block)?;
+            compiled_blocks.insert(block.name.clone(), compiled_block);
+            origin_blocks.insert(block.name.clone(), block);
+        }
+
+        // Compile control flow
         let function_analysis = FunctionAnalysis::new(func);
         let control_flow = function_analysis.control_flow_graph();
 
-        let entry_name = control_flow.entry();
+        let entry = control_flow.entry();
 
-        // for block in &func.basic_blocks {
-        //     let it = control_flow.succs(&block.name);
-        //
-        //     let mut is_loop = false;
-        //     for i in it {
-        //         if i == CFGNode::Block(&block.name) {
-        //             is_loop = true;
-        //         }
-        //     }
-        //
-        //     let generated_block = self.compile_basic_block(block)?;
-        // }
+        utils::build_control_block_from_entry(&mut compiled_blocks, &origin_blocks, entry.clone())?;
+
+        let mut entry_block = compiled_blocks
+            .remove(entry)
+            .ok_or(anyhow!("Failed to get entry"))?
+            .0;
+
+        block.0.append(&mut entry_block);
 
         Ok(())
     }
@@ -148,7 +157,9 @@ impl Compiler {
             Instruction::ICmp(_i) => {}
             Instruction::Phi(_i) => {}
             Instruction::Call(i) => calls.push(self.compile_call_inst(i)?.into()),
-            Instruction::InsertValue(_i) => {}
+            Instruction::InsertValue(_i) => {
+                println!("{:#?}", _i);
+            }
             Instruction::ExtractValue(_i) => {}
             _ => return Err(anyhow!("Unspported instruction: {}", inst)),
         }
@@ -157,9 +168,10 @@ impl Compiler {
     }
 
     pub fn compile_call_inst(&self, call: &Call) -> Result<FunctionCall> {
-        let name = utils::build_call_function_name(&call)?;
+        let name = utils::build_call_function_name(call)?;
 
         let function_call = FunctionCall::new(name);
+        // TODO: Add arguments
 
         Ok(function_call)
     }

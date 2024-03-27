@@ -8,11 +8,10 @@ fn main() -> Result<()> {
 
     let mut config = Config::default("Contract".into());
 
-    config.entry = "main".into();
-
     let mut compiler = Compiler::new(config)?;
 
     let module = Module::from_ir_path("llvm2yul/lls/test.ll").map_err(|e| anyhow!("{e}"))?;
+    // let module = Module::from_ir_path("llvm2yul/lls/store.ll").map_err(|e| anyhow!("{e}"))?;
     let object = compiler.compile(module)?;
 
     // println!("{:#?}", object);

@@ -23,6 +23,12 @@ impl From<FunctionCall> for Value {
     }
 }
 
+impl From<Ident> for Value {
+    fn from(value: Ident) -> Self {
+        Self::Variable(value)
+    }
+}
+
 impl Value {
     pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
     where
