@@ -3,7 +3,7 @@ use std::io::Write;
 use anyhow::Result;
 
 pub struct Writer<W> {
-    pub(crate) w: W,
+    pub w: W,
     step: usize,
     tab: String,
     begin_line: bool,

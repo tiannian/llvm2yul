@@ -5,13 +5,12 @@ target triple = "x86_64-unknown-linux-gnu"
 
 ; store::deploy_contract
 ; Function Attrs: noinline nonlazybind uwtable
-define internal fastcc { i32, i32 } @_ZN5store15deploy_contract17h318c8ceaf280eab3E() unnamed_addr #0 {
+define internal fastcc { i32, i32 } @_ZN5store15deploy_contract17h6665ed0047491167E(i32 noundef %index) unnamed_addr #0 {
 start:
   %codeoffset = tail call noundef i32 @__yul_dataoffset(ptr noundef nonnull @_deployed_entry)
   %codesize = tail call noundef i32 @__yul_datasize(ptr noundef nonnull @_deployed_entry)
-  %idx0 = tail call noundef i32 @__yul__ext_literal(i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 0)
-  tail call void @__yul_datacopy(i32 noundef %idx0, i32 noundef %codeoffset, i32 noundef %codesize)
-  %0 = insertvalue { i32, i32 } poison, i32 %idx0, 0
+  tail call void @__yul_datacopy(i32 noundef %index, i32 noundef %codeoffset, i32 noundef %codesize)
+  %0 = insertvalue { i32, i32 } poison, i32 %index, 0
   %1 = insertvalue { i32, i32 } %0, i32 %codesize, 1
   ret { i32, i32 } %1
 }
@@ -23,7 +22,7 @@ start:
   %idx = tail call noundef i32 @__yul__ext_literal(i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 0, i32 noundef 1)
   tail call void @__yul_sstore(i32 noundef %idx, i32 noundef %sender)
 ; call store::deploy_contract
-  %0 = tail call fastcc { i32, i32 } @_ZN5store15deploy_contract17h318c8ceaf280eab3E()
+  %0 = tail call fastcc { i32, i32 } @_ZN5store15deploy_contract17h6665ed0047491167E(i32 noundef %idx)
   %_6.0 = extractvalue { i32, i32 } %0, 0
   %_6.1 = extractvalue { i32, i32 } %0, 1
   tail call void @__yul_return(i32 noundef %_6.0, i32 noundef %_6.1)
@@ -45,13 +44,13 @@ declare noundef i32 @__yul_dataoffset(ptr noundef nonnull) unnamed_addr #1
 declare noundef i32 @__yul_datasize(ptr noundef nonnull) unnamed_addr #1
 
 ; Function Attrs: nonlazybind uwtable
-declare noundef i32 @__yul__ext_literal(i32 noundef, i32 noundef, i32 noundef, i32 noundef, i32 noundef, i32 noundef, i32 noundef, i32 noundef) unnamed_addr #1
-
-; Function Attrs: nonlazybind uwtable
 declare void @__yul_datacopy(i32 noundef, i32 noundef, i32 noundef) unnamed_addr #1
 
 ; Function Attrs: nonlazybind uwtable
 declare noundef i32 @__yul_caller() unnamed_addr #1
+
+; Function Attrs: nonlazybind uwtable
+declare noundef i32 @__yul__ext_literal(i32 noundef, i32 noundef, i32 noundef, i32 noundef, i32 noundef, i32 noundef, i32 noundef, i32 noundef) unnamed_addr #1
 
 ; Function Attrs: nonlazybind uwtable
 declare void @__yul_sstore(i32 noundef, i32 noundef) unnamed_addr #1

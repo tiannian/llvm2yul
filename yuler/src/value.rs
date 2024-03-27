@@ -7,6 +7,7 @@ use crate::{Ident, Literal, Writer};
 #[derive(Debug, Clone)]
 pub enum Value {
     Literal(Literal),
+    Variable(Ident),
     FunctionCall(FunctionCall),
 }
 
@@ -29,6 +30,7 @@ impl Value {
     {
         match self {
             Self::Literal(v) => v.write(&mut w.w),
+            Self::Variable(v) => v.write(w),
             Self::FunctionCall(v) => v.write(w),
         }
     }
@@ -41,6 +43,13 @@ pub struct FunctionCall {
 }
 
 impl FunctionCall {
+    pub fn new(name: Ident) -> Self {
+        Self {
+            name,
+            args: Default::default(),
+        }
+    }
+
     pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
     where
         W: Write,

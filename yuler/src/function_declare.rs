@@ -40,23 +40,28 @@ impl FunctionDefinition {
 
             w.write_str(", ")?;
         }
+        w.write_str(") ")?;
 
-        w.write_str(") -> ")?;
+        // Returns
+        if !self.rets.is_empty() {
+            w.write_str("->")?;
 
-        let skip = self.rets.len();
-        for (i, v) in self.rets.iter().enumerate() {
-            v.write(w)?;
+            let skip = self.rets.len();
+            for (i, v) in self.rets.iter().enumerate() {
+                v.write(w)?;
 
-            if skip == i + 1 {
-                break;
+                if skip == i + 1 {
+                    break;
+                }
+
+                w.write_str(", ")?;
             }
 
-            w.write_str(", ")?;
+            w.write_str(" ")?;
         }
 
-        w.write_str(" ")?;
-
         self.block.write(w)?;
+        w.write_end()?;
 
         Ok(())
     }

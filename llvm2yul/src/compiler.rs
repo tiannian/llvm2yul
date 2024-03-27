@@ -1,11 +1,17 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
-use anyhow::Result;
-use llvm_ir::{Function, Module};
-use llvm_ir_analysis::ModuleAnalysis;
-use yuler::{FunctionCall, FunctionDefinition, Ident, Object};
+use anyhow::{anyhow, Result};
+use llvm_ir::{
+    function::Parameter, instruction::Call, BasicBlock, Function, Instruction, Module, Type,
+};
+use llvm_ir_analysis::{FunctionAnalysis, ModuleAnalysis};
+use yuler::{Block, FunctionCall, FunctionDefinition, Ident, Object, Statement};
 
-use crate::{is_builtin, utils, Config};
+use crate::{
+    is_builtin,
+    utils::{self, build_list_by_type},
+    Config,
+};
 
 pub struct Compiler {
     config: Config,
@@ -70,7 +76,19 @@ impl Compiler {
 
         let name = Ident::new(&func.name)?;
 
-        let function_defination = FunctionDefinition::new(name);
+        let mut function_defination = FunctionDefinition::new(name);
+
+        // build parameters
+        for p in &func.parameters {
+            let mut p = self.compile_function_parameter(p)?;
+            function_defination.args.append(&mut p);
+        }
+
+        // build return value
+        function_defination.rets = self.compile_function_ret(&func.return_type)?;
+
+        // build block
+        self.compile_function_body(&mut function_defination.block, func)?;
 
         self.func_caches
             .insert(func.name.clone(), function_defination.clone());
@@ -78,90 +96,58 @@ impl Compiler {
         Ok(function_defination)
     }
 
-    pub fn compile_function_header(&mut self) -> Result<()> {
+    pub fn compile_function_parameter(&self, parameter: &Parameter) -> Result<Vec<Ident>> {
+        log::info!("Parameter: {:?}", parameter);
+
+        utils::build_list_by_type(Some(&parameter.name), &parameter.ty, false)
+    }
+
+    pub fn compile_function_ret(&self, ty: &Type) -> Result<Vec<Ident>> {
+        log::debug!("Return type: {:?}", ty);
+
+        build_list_by_type(None, ty, true)
+    }
+
+    pub fn compile_function_body(&self, block: &mut Block, func: &Function) -> Result<()> {
+        // let function_analysis = FunctionAnalysis::new(func);
+        // let control_flow = function_analysis.control_flow_graph();
+
+        let mut blocks = BTreeMap::new();
+
+        for block in &func.basic_blocks {
+            let generated_block = self.compile_basic_block(block)?;
+            blocks.insert(block.name.clone(), generated_block);
+        }
+
         Ok(())
     }
-}
 
-// pub fn compile_function(func: &Function, idx: usize) -> Result<FunctionDefinition> {
-//     let mut name_incr = 0;
-//
-//     let name = Ident::new(format!("f{}", idx))?;
-//     let mut args = Vec::new();
-//     let mut symbol_map = HashMap::new();
-//
-//     macro_rules! incr_and_build_name {
-//         ($t:expr, $n:expr) => {{
-//             let name = Ident::new(format!("v{name_incr}"))?;
-//             symbol_map.insert($n, name.clone());
-//             $t.push(name);
-//             name_incr += 1;
-//         }};
-//     }
-//
-//     // args
-//     for arg in &func.parameters {
-//         match arg.ty.as_ref() {
-//             Type::IntegerType { bits: _ } => incr_and_build_name!(args, arg.name.clone()),
-//             Type::PointerType { addr_space: _ } => incr_and_build_name!(args, arg.name.clone()),
-//             Type::ArrayType {
-//                 element_type: _,
-//                 num_elements: _,
-//             } => {
-//                 todo!()
-//             }
-//             Type::StructType {
-//                 element_types: _,
-//                 is_packed: _,
-//             } => {
-//                 todo!()
-//             }
-//             Type::NamedStructType { name: _ } => {
-//                 todo!()
-//             }
-//             _ => return Err(anyhow!("Unsupported type")),
-//         }
-//     }
-//
-//     // return value
-//     let mut rets = Vec::new();
-//     let ret_name = Name::Name(Box::new("__return_value".into()));
-//
-//     match func.return_type.as_ref() {
-//         Type::VoidType => {}
-//         Type::IntegerType { bits: _ } => incr_and_build_name!(rets, ret_name),
-//         Type::PointerType { addr_space: _ } => incr_and_build_name!(rets, ret_name),
-//         Type::ArrayType {
-//             element_type: _,
-//             num_elements: _,
-//         } => {
-//             todo!()
-//         }
-//         Type::NamedStructType { name: _ } => {
-//             todo!()
-//         }
-//         Type::StructType {
-//             element_types: _,
-//             is_packed: _,
-//         } => {
-//             todo!()
-//         }
-//         _ => {}
-//     }
-//
-//     // block
-//     let mut block = Block::default();
-//     let funcion_analysis = FunctionAnalysis::new(func);
-//     let control_flow = funcion_analysis.control_flow_graph();
-//
-//     for block in &func.basic_blocks {}
-//
-//     let function = FunctionDefinition {
-//         name,
-//         args,
-//         rets,
-//         block,
-//     };
-//
-//     Ok(function)
-// }
+    pub fn compile_basic_block(&self, bb: &BasicBlock) -> Result<Block> {
+        let mut block = Block::default();
+
+        for inst in &bb.instrs {
+            block.0.append(&mut self.compile_inst(inst)?);
+        }
+
+        Ok(block)
+    }
+
+    pub fn compile_inst(&self, inst: &Instruction) -> Result<Vec<Statement>> {
+        let calls = Vec::new();
+
+        match inst {
+            // Instruction::Add(i) => {}
+            // Instruction::Sub(i) => {}
+            Instruction::Call(i) => {
+                log::debug!("{:#?}", i)
+            }
+            _ => return Err(anyhow!("Unspported instruction: {:?}", inst)),
+        }
+
+        Ok(calls)
+    }
+
+    // pub fn compile_call_inst(&self, call: Call) -> Result<FunctionCall> {
+    //     // let function_call = FunctionCall::n
+    // }
+}
