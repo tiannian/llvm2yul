@@ -14,7 +14,11 @@ fn _iter_type(
         let iname = yul_ident_name(name);
         let iname = tidy_name(&iname);
 
-        Ident::new(format!("{}_{}", iname, tokens.len()))?
+        if tokens.is_empty() {
+            Ident::new(iname)?
+        } else {
+            Ident::new(format!("{}_{}", iname, tokens.len()))?
+        }
     } else {
         Ident::new(format!("__yn_return_{}", tokens.len()))?
     };

@@ -5,10 +5,10 @@ use llvm_ir::{
     function::Parameter, instruction::Call, BasicBlock, Function, Instruction, Module, Type,
 };
 use llvm_ir_analysis::{FunctionAnalysis, ModuleAnalysis};
-use yuler::{Block, FunctionCall, FunctionDefinition, Ident, Object, Statement};
+use yuler::{Assignment, Block, FunctionCall, FunctionDefinition, Ident, Object, Statement};
 
 use crate::{
-    utils::{self, build_list_by_type},
+    utils::{self, build_list_by_type, tidy_name, yul_ident_name},
     Config,
 };
 
@@ -71,9 +71,11 @@ impl Compiler {
             return Ok(f.clone());
         }
 
-        log::debug!("Missing funcion {} cache, build it", func.name);
+        let function_name = utils::tidy_name(&func.name);
 
-        let name = Ident::new(&func.name)?;
+        log::debug!("Missing funcion {} cache, build it", function_name);
+
+        let name = Ident::new(function_name)?;
 
         let mut function_defination = FunctionDefinition::new(name);
 
@@ -113,7 +115,7 @@ impl Compiler {
 
         // Compile blocks
         for block in &func.basic_blocks {
-            println!("{:#?}", block.term);
+            // println!("{:#?}", block.term);
 
             let compiled_block = self.compile_basic_block(block)?;
             compiled_blocks.insert(block.name.clone(), compiled_block);
@@ -152,27 +154,38 @@ impl Compiler {
         let mut calls = Vec::new();
 
         match inst {
-            Instruction::Add(_i) => {}
-            // Instruction::Sub(i) => {}
             Instruction::ICmp(_i) => {}
             Instruction::Phi(_i) => {}
-            Instruction::Call(i) => calls.push(self.compile_call_inst(i)?.into()),
-            Instruction::InsertValue(_i) => {
-                println!("{:#?}", _i);
-            }
+            Instruction::Call(i) => calls.push(self.compile_call_inst(i)?),
+            Instruction::InsertValue(_i) => {}
             Instruction::ExtractValue(_i) => {}
+            Instruction::Alloca(_i) => {}
+            Instruction::Load(_i) => {}
+            Instruction::Store(_i) => {}
             _ => return Err(anyhow!("Unspported instruction: {}", inst)),
         }
 
         Ok(calls)
     }
 
-    pub fn compile_call_inst(&self, call: &Call) -> Result<FunctionCall> {
+    pub fn compile_call_inst(&self, call: &Call) -> Result<Statement> {
         let name = utils::build_call_function_name(call)?;
 
-        let function_call = FunctionCall::new(name);
-        // TODO: Add arguments
+        let mut function_call = FunctionCall::new(name);
 
-        Ok(function_call)
+        function_call.args = utils::build_call_function_args(call)?;
+
+        let res = if let Some(dest) = &call.dest {
+            let name = Ident::new(yul_ident_name(dest))?;
+            Assignment {
+                names: vec![name],
+                value: function_call.into(),
+            }
+            .into()
+        } else {
+            function_call.into()
+        };
+
+        Ok(res)
     }
 }

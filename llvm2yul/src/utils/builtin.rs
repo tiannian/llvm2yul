@@ -10,6 +10,7 @@ pub fn builtin_args_num(name: &str) -> Option<usize> {
     }
 
     let r = match name {
+        "_ext_literal" => 4,
         "stop" => 0,
         "add" => 2,
         "sub" => 2,

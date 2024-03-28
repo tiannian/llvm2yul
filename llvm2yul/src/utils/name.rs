@@ -8,5 +8,5 @@ pub fn yul_ident_name(n: &Name) -> String {
 }
 
 pub fn tidy_name(s: &str) -> String {
-    s.replace('.', "_")
+    s.replace(['.', '$'], "_")
 }

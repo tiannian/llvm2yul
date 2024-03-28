@@ -1,10 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use anyhow::{anyhow, Result};
-use llvm_ir::{
-    terminator::{CondBr, Ret},
-    BasicBlock, Name, Operand, Terminator,
-};
+use llvm_ir::{terminator::Ret, BasicBlock, Name, Operand, Terminator};
 use yuler::{Assignment, Block, FunctionCall, Ident, Statement};
 
 use super::{build_list_by_type, yul_ident_name};
@@ -47,8 +44,8 @@ fn _iter_control_block(
 
             compiled_blocks.insert(basic_block_name, res);
         }
-        Terminator::CondBr(t) => {}
-        Terminator::Switch(t) => {}
+        Terminator::CondBr(_t) => {}
+        Terminator::Switch(_t) => {}
         Terminator::Unreachable(_t) => {
             let generated_block = compiled_blocks
                 .get_mut(&name)
@@ -80,8 +77,6 @@ pub fn build_control_block_from_entry(
 }
 
 fn compile_return_value(inst: &Ret, block: &mut Block) -> Result<()> {
-    // This part need insert value inst support.
-
     if let Some(operand) = &inst.return_operand {
         // Match return value
 
@@ -120,14 +115,14 @@ fn compile_return_value(inst: &Ret, block: &mut Block) -> Result<()> {
     Ok(())
 }
 
-fn compile_cond_br(block_name: Name, br: CondBr) -> Result<()> {
-    // Check loop or if
-
-    if br.true_dest == block_name || br.false_dest == block_name {
-        // Loop
-    } else {
-        // False
-    }
-
-    Ok(())
-}
+// fn compile_cond_br(block_name: Name, br: CondBr) -> Result<()> {
+//     // Check loop or if
+//
+//     if br.true_dest == block_name || br.false_dest == block_name {
+//         // Loop
+//     } else {
+//         // False
+//     }
+//
+//     Ok(())
+// }
