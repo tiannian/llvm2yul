@@ -1,18 +1,28 @@
 use anyhow::{anyhow, Result};
 use llvm_ir::{
-    instruction::{Alloca, Call, ExtractValue, InsertValue, Load, Phi, Select, Store},
+    instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Load, Phi, Select, Store},
     BasicBlock, Instruction,
 };
 use yuler::Statement;
 
-pub struct BlockCompiler {}
+use crate::{CallCompiler, ExtendedArgsMap};
 
-impl BlockCompiler {
-    pub fn compile(&self, bb: &BasicBlock) -> Result<Vec<Statement>> {
-        let stmts = Vec::new();
+pub struct BlockCompiler<'a> {
+    bb: &'a BasicBlock,
+    extended_args: &'a ExtendedArgsMap,
+}
 
-        for inst in &bb.instrs {
-            self.compile_inst(inst)?;
+impl<'a> BlockCompiler<'a> {
+    pub fn new(bb: &'a BasicBlock, extended_args: &'a ExtendedArgsMap) -> Self {
+        Self { bb, extended_args }
+    }
+
+    pub fn compile(&self) -> Result<Vec<Statement>> {
+        let mut stmts = Vec::new();
+
+        for inst in &self.bb.instrs {
+            let i = self.compile_inst(inst)?;
+            stmts.push(i);
         }
 
         Ok(stmts)
@@ -28,6 +38,7 @@ impl BlockCompiler {
             Instruction::Select(i) => self.compile_select(i),
             Instruction::ExtractValue(i) => self.compile_extract_value(i),
             Instruction::InsertValue(i) => self.compile_insert_value(i),
+            Instruction::IntToPtr(i) => self.compile_int2ptr(i),
             _ => Err(anyhow!("Unsupported instruction: {}", inst)),
         }
     }
@@ -37,7 +48,9 @@ impl BlockCompiler {
     }
 
     fn compile_call(&self, call: &Call) -> Result<Statement> {
-        Ok(Statement::Break)
+        let compiler = CallCompiler::new(call, self.extended_args);
+
+        compiler.compile_call()
     }
     fn compile_alloca(&self, _inst: &Alloca) -> Result<Statement> {
         Ok(Statement::Break)
@@ -56,6 +69,10 @@ impl BlockCompiler {
     }
 
     fn compile_insert_value(&self, _inst: &InsertValue) -> Result<Statement> {
+        Ok(Statement::Break)
+    }
+
+    fn compile_int2ptr(&self, _inst: &IntToPtr) -> Result<Statement> {
         Ok(Statement::Break)
     }
 }
