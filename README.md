@@ -2,6 +2,10 @@
 
 > Convertor from LLVM to Yul
 
+## Passes Design
+
+1. 
+
 ## Features and TODOs
 
 - [X] 64 / 32 bit as primitive type. Primitive type use parameter and return value directly.
@@ -13,6 +17,7 @@
     - [ ] Call
 - [ ] Map LLVM IR function call to yul.
     - [ ] Use FFI function to map yul builtin function.
+    - [ ] allocate function as builtin function
 - [ ] Map block termiantor to control flow.
     - [X] Ret to leave
     - [ ] Br

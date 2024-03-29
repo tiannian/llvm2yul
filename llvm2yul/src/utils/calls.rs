@@ -37,7 +37,7 @@ pub fn build_call_function_args(call: &Call) -> Result<Vec<Value>> {
             Operand::ConstantOperand(c) => {
                 let constant = c.as_ref();
 
-                log::warn!("{:?}", constant);
+                // log::warn!("{:?}", call);
 
                 match constant {
                     Constant::Int { bits: _, value } => {
@@ -59,6 +59,7 @@ pub fn build_call_function_args(call: &Call) -> Result<Vec<Value>> {
                             _ => return Err(anyhow!("Unknown global reference type")),
                         }
                     }
+                    Constant::Null(_) => res.push(Literal::int_number("0")?.into()),
                     _ => return Err(anyhow!("Unsupport value")),
                 }
             }
