@@ -12,21 +12,21 @@ fn _iter_type(
 ) -> Result<()> {
     let sname = if let Some(name) = name {
         let iname = yul_ident_name(name);
-        let iname = tidy_name(&iname);
-
-        if tokens.is_empty() {
-            Ident::new(iname)?
-        } else {
-            Ident::new(format!("{}_{}", iname, tokens.len()))?
-        }
+        tidy_name(&iname)
     } else {
-        Ident::new(format!("__yn_return_{}", tokens.len()))?
+        "__yn_return".into()
+    };
+
+    let sname = if tokens.is_empty() {
+        Ident::new(sname)?
+    } else {
+        Ident::new(format!("{}_{}", sname, tokens.len()))?
     };
 
     match ty {
         Type::VoidType => {
             if !void_generated {
-                return Err(anyhow!("Unspported Type: {:?}", ty));
+                return Err(anyhow!("Unspported Void Type"));
             }
         }
         Type::IntegerType { bits } => {
@@ -46,7 +46,7 @@ fn _iter_type(
                 _iter_type(tokens, name, e, void_generated)?;
             }
         }
-        _ => return Err(anyhow!("Unspported Type: {:?}", ty)),
+        _ => return Err(anyhow!("Unspported Type: {}", ty)),
     }
 
     Ok(())

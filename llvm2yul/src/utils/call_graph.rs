@@ -8,12 +8,12 @@ fn _iter_functions(functions: &mut HashSet<String>, call_graph: &CallGraph<'_>, 
     let it = call_graph.callees(entry);
     for name in it {
         if !functions.contains(name) {
-            functions.insert(name.into());
-
             if is_builtin(name) {
                 log::debug!("Meet builtin function: {name}");
                 continue;
             }
+
+            functions.insert(name.into());
 
             _iter_functions(functions, call_graph, name)
         }
