@@ -4,7 +4,38 @@
 
 ## Passes Design
 
-1. 
+### Compile Object
+
+1. Iterate object's all function.
+2. Compile function
+    1. Compile Header
+    2. Compile Block.
+    3. Compile Termiantor
+    4. Compile Body
+
+### Compile Function Header
+
+In this step, llvm2yul will flat struct.
+
+### Compile Block
+
+- Compile phi instruction
+- Compile call instruction. struct will be flatted
+- Compile load
+- Compile store
+- Compile select
+
+### Compile Termiantor
+
+- Compile Ret
+- Compile Br
+- Compile CondBr
+- Compile Switch
+- Compile Unreachable
+
+### Compile builtin call
+
+Replace function call into builtin
 
 ## Features and TODOs
 
