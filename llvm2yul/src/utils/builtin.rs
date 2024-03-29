@@ -93,6 +93,9 @@ pub fn builtin_args_num(name: &str) -> Option<usize> {
         "difficulty" => 0,
         "prevrandao" => 0,
         "gaslimit" => 0,
+        "datacopy" => 3,
+        "datasize" => 1,
+        "dataoffset" => 1,
         _ => return None,
     };
 
