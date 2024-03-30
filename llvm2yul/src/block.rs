@@ -1,11 +1,11 @@
 use anyhow::{anyhow, Result};
 use llvm_ir::{
     instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Load, Phi, Select, Store},
-    BasicBlock, Instruction,
+    BasicBlock, Instruction, Operand,
 };
-use yuler::Statement;
+use yuler::{Ident, Statement, VariableDeclare};
 
-use crate::{CallCompiler, ExtendedArgsMap};
+use crate::{utils, CallCompiler, ExtendedArgsMap};
 
 pub struct BlockCompiler<'a> {
     bb: &'a BasicBlock,
@@ -33,8 +33,8 @@ impl<'a> BlockCompiler<'a> {
             Instruction::Phi(i) => self.compile_phi(i),
             Instruction::Call(i) => self.compile_call(i),
             Instruction::Alloca(i) => self.compile_alloca(i),
-            Instruction::Load(i) => self.compile_load(i),
-            Instruction::Store(i) => self.compile_store(i),
+            // Instruction::Load(i) => self.compile_load(i),
+            // Instruction::Store(i) => self.compile_store(i),
             Instruction::Select(i) => self.compile_select(i),
             Instruction::ExtractValue(i) => self.compile_extract_value(i),
             Instruction::InsertValue(i) => self.compile_insert_value(i),
@@ -52,7 +52,9 @@ impl<'a> BlockCompiler<'a> {
 
         compiler.compile_call()
     }
-    fn compile_alloca(&self, _inst: &Alloca) -> Result<Statement> {
+    fn compile_alloca(&self, inst: &Alloca) -> Result<Statement> {
+        log::debug!("{:#?}", inst);
+
         Ok(Statement::Break)
     }
     fn compile_load(&self, _inst: &Load) -> Result<Statement> {
@@ -64,8 +66,34 @@ impl<'a> BlockCompiler<'a> {
     fn compile_select(&self, _inst: &Select) -> Result<Statement> {
         Ok(Statement::Break)
     }
-    fn compile_extract_value(&self, _inst: &ExtractValue) -> Result<Statement> {
-        Ok(Statement::Break)
+    fn compile_extract_value(&self, inst: &ExtractValue) -> Result<Statement> {
+        // TODO: Add flat deep struct
+
+        if let Operand::LocalOperand { name, ty: _ } = &inst.aggregate {
+            if inst.indices.len() == 1 {
+                let name = utils::yul_ident_name(name);
+
+                let index = inst.indices[0];
+
+                let name = if index == 0 {
+                    name
+                } else {
+                    format!("{}_{}", name, index)
+                };
+
+                let dest = utils::yul_ident_name(&inst.dest);
+
+                Ok(VariableDeclare {
+                    names: vec![Ident::new(dest)?],
+                    value: Ident::new(name)?.into(),
+                }
+                .into())
+            } else {
+                Err(anyhow!("Unsupported multi indices for extract value"))
+            }
+        } else {
+            Err(anyhow!("Unsupported struct type on extract value."))
+        }
     }
 
     fn compile_insert_value(&self, _inst: &InsertValue) -> Result<Statement> {
