@@ -7,6 +7,12 @@ use crate::{Statement, Writer};
 #[derive(Debug, Clone, Default)]
 pub struct Block(pub Vec<Statement>);
 
+impl From<Vec<Statement>> for Block {
+    fn from(value: Vec<Statement>) -> Self {
+        Self(value)
+    }
+}
+
 impl Block {
     pub fn write<W>(&self, w: &mut Writer<W>) -> Result<()>
     where

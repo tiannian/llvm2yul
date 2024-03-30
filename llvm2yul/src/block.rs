@@ -5,7 +5,7 @@ use llvm_ir::{
 };
 use yuler::{FunctionCall, Ident, Literal, Statement, VariableDeclare};
 
-use crate::{utils, CallCompiler};
+use crate::{utils, CallCompiler, SelectCompiler};
 
 pub struct BlockCompiler<'a> {
     bb: &'a BasicBlock,
@@ -20,24 +20,26 @@ impl<'a> BlockCompiler<'a> {
         let mut stmts = Vec::new();
 
         for inst in &self.bb.instrs {
-            let i = self.compile_inst(inst)?;
-            stmts.push(i);
+            let mut i = self.compile_inst(inst)?;
+            stmts.append(&mut i);
         }
 
         Ok(stmts)
     }
 
-    pub fn compile_inst(&self, inst: &Instruction) -> Result<Statement> {
-        match inst {
-            Instruction::Phi(i) => self.compile_phi(i),
-            Instruction::Call(i) => self.compile_call(i),
-            Instruction::Alloca(i) => self.compile_alloca(i),
-            Instruction::Select(i) => self.compile_select(i),
-            Instruction::ExtractValue(i) => self.compile_extract_value(i),
-            Instruction::InsertValue(i) => self.compile_insert_value(i),
-            Instruction::IntToPtr(i) => self.compile_int2ptr(i),
-            _ => Err(anyhow!("Unsupported instruction: {}", inst)),
-        }
+    pub fn compile_inst(&self, inst: &Instruction) -> Result<Vec<Statement>> {
+        let res = match inst {
+            Instruction::Phi(i) => vec![self.compile_phi(i)?],
+            Instruction::Call(i) => vec![self.compile_call(i)?],
+            Instruction::Alloca(i) => vec![self.compile_alloca(i)?],
+            Instruction::Select(i) => self.compile_select(i)?,
+            Instruction::ExtractValue(i) => vec![self.compile_extract_value(i)?],
+            Instruction::InsertValue(i) => vec![self.compile_insert_value(i)?],
+            Instruction::IntToPtr(i) => vec![self.compile_int2ptr(i)?],
+            _ => return Err(anyhow!("Unsupported instruction: {}", inst)),
+        };
+
+        Ok(res)
     }
 
     fn compile_phi(&self, _inst: &Phi) -> Result<Statement> {
@@ -79,26 +81,10 @@ impl<'a> BlockCompiler<'a> {
         .into())
     }
 
-    fn compile_select(&self, inst: &Select) -> Result<Statement> {
-        log::debug!("{:#?}", inst);
+    fn compile_select(&self, inst: &Select) -> Result<Vec<Statement>> {
+        let select = SelectCompiler::new(inst);
 
-        let name = if let Operand::LocalOperand { name, ty } = &inst.condition {
-            if let Type::IntegerType { bits: 1 } = ty.as_ref() {
-                Ident::new(utils::yul_ident_name(name))?
-            } else {
-                return Err(anyhow!(
-                    "Fatal Error, condition of select must be i1, {}",
-                    inst.condition
-                ));
-            }
-        } else {
-            return Err(anyhow!(
-                "Fatal Error, condition of select must be i1, {}",
-                inst.condition
-            ));
-        };
-
-        Ok(Statement::Break)
+        select.compile()
     }
 
     fn compile_extract_value(&self, inst: &ExtractValue) -> Result<Statement> {
