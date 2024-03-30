@@ -5,11 +5,11 @@ use llvm_ir::{Function, Module};
 use llvm_ir_analysis::ModuleAnalysis;
 use yuler::{FunctionCall, FunctionDefinition, Ident, Object};
 
-use crate::{utils, FunctionCompiler};
+use crate::{utils, ExtendedArgsMap, FunctionCompiler};
 
 #[derive(Debug, Default)]
 pub struct Compiler {
-    extended_args: BTreeMap<String, BTreeMap<Option<String>, Vec<Ident>>>,
+    extended_args: ExtendedArgsMap,
     func_caches: BTreeMap<String, FunctionDefinition>,
 }
 

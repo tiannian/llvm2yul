@@ -7,7 +7,7 @@ use yuler::{FunctionDefinition, Ident};
 
 use crate::{utils, BlockCompiler};
 
-pub(crate) type ExtendedArgsMap = BTreeMap<String, BTreeMap<Option<String>, Vec<Ident>>>;
+pub(crate) type ExtendedArgsMap = BTreeMap<String, Vec<usize>>;
 
 #[derive(Debug)]
 pub struct FunctionCompiler<'a> {
@@ -27,34 +27,25 @@ impl<'a> FunctionCompiler<'a> {
         })
     }
 
-    pub fn set_extended_args(
-        &mut self,
-        extended_args: &'a BTreeMap<String, BTreeMap<Option<String>, Vec<Ident>>>,
-    ) {
+    pub fn set_extended_args(&mut self, extended_args: &'a ExtendedArgsMap) {
         self.extended_args = Some(extended_args)
     }
 
-    pub fn compile_function_header(&mut self) -> Result<BTreeMap<Option<String>, Vec<Ident>>> {
-        let mut extended_args = BTreeMap::new();
+    pub fn compile_function_header(&mut self) -> Result<Vec<usize>> {
+        let mut extended_args = Vec::new();
+
+        // Compile function return type
+        let mut rets = utils::build_list_by_type(None, &self.llvm_func.return_type, true)?;
+        extended_args.push(rets.len());
+        self.func.rets.append(&mut rets);
 
         // Compile function header
         // Compile function parameters
         for paramter in &self.llvm_func.parameters {
             let mut args = utils::build_list_by_type(Some(&paramter.name), &paramter.ty, false)?;
-
-            if args.len() > 1 {
-                extended_args.insert(Some(utils::yul_ident_name(&paramter.name)), args.clone());
-            }
-
+            extended_args.push(args.len());
             self.func.args.append(&mut args)
         }
-
-        // Compile function return type
-        let mut rets = utils::build_list_by_type(None, &self.llvm_func.return_type, true)?;
-        if rets.len() > 1 {
-            extended_args.insert(None, rets.clone());
-        }
-        self.func.rets.append(&mut rets);
 
         Ok(extended_args)
     }

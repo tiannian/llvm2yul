@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use llvm_ir::{instruction::Call, Constant, Operand, Type};
-use yuler::{FunctionCall, Ident, Literal, Statement, Value};
+use llvm_ir::{instruction::Call, Constant, Name, Operand, Type};
+use yuler::{Assignment, FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
 
 use crate::{utils, ExtendedArgsMap};
 
@@ -18,7 +18,7 @@ impl<'a> CallCompiler<'a> {
     }
 
     pub fn compile_call(&self) -> Result<Statement> {
-        let call_name = self.build_call_function_name()?;
+        let (call_name, rets) = self.build_call_function_name_and_rets()?;
 
         // build function call name
         let mut func_call = FunctionCall::new(Ident::new(&call_name)?);
@@ -28,21 +28,23 @@ impl<'a> CallCompiler<'a> {
             // builtin functions don't have any struct parameters. It just have plain type.
             self.build_call_function_parameters_directly()?
         } else {
-            // For common function call may have struct, we can build function call parameter from
-            self.build_call_function_parameters(&call_name)?
+            // For common function call may have struct, we can build function call parameter based
+            // on map of args
+            self.build_call_function_parameters()?
         };
 
-        let res = if let Some(dest) = &self.call.dest {
+        Ok(if rets.is_empty() {
             func_call.into()
-            // Assignment{names: vec![]}.into()
         } else {
-            func_call.into()
-        };
-
-        Ok(res)
+            VariableDeclare {
+                names: rets,
+                value: func_call.into(),
+            }
+            .into()
+        })
     }
 
-    pub fn build_call_function_name(&self) -> Result<String> {
+    pub fn build_call_function_name_and_rets(&self) -> Result<(String, Vec<Ident>)> {
         let operand = self
             .call
             .function
@@ -54,12 +56,24 @@ impl<'a> CallCompiler<'a> {
             .as_constant()
             .ok_or(anyhow!("called function must be constant"))?;
 
-        if let Constant::GlobalReference { name, ty: _ } = constant {
+        if let Constant::GlobalReference { name, ty } = constant {
             let name = utils::yul_ident_name(name);
-            if name == "_ZN11patine_core5alloc8allocate17h72f78d4cb2bfc710E" {
-                log::debug!("Build function call to {name}, {:#?}", self.call);
+
+            if let Some(dest) = &self.call.dest {
+                if let Type::FuncType {
+                    result_type,
+                    param_types: _,
+                    is_var_arg: _,
+                } = ty.as_ref()
+                {
+                    let names = utils::build_list_by_type(Some(dest), result_type, false)?;
+                    Ok((name, names))
+                } else {
+                    Err(anyhow!("must call function"))
+                }
+            } else {
+                Ok((name, vec![]))
             }
-            Ok(name)
         } else {
             Err(anyhow!("call global function only"))
         }
@@ -75,31 +89,22 @@ impl<'a> CallCompiler<'a> {
         Ok(res)
     }
 
-    pub fn build_call_function_parameters(&self, call_name: &str) -> Result<Vec<Value>> {
+    pub fn build_call_function_parameters(&self) -> Result<Vec<Value>> {
         let mut res = Vec::new();
 
         for (parameter, _) in &self.call.arguments {
-            if let Some(r) = self.extended_args.get(call_name) {
-                match parameter {
-                    Operand::LocalOperand { name, ty: _ } => {
-                        // TODO: Fix need. Use position
-                        let arg_name = utils::yul_ident_name(name);
+            match parameter {
+                Operand::LocalOperand { name, ty } => {
+                    let names = utils::build_list_by_type(Some(name), ty, false)?;
 
-                        if let Some(args) = r.get(&Some(arg_name.clone())) {
-                            for arg in args {
-                                res.push(arg.clone().into());
-                            }
-                        } else {
-                            res.push(Ident::new(arg_name)?.into());
-                        }
+                    for n in names {
+                        res.push(n.into())
                     }
-                    Operand::ConstantOperand(constant) => {
-                        res.push(build_function_arg_from_constant(constant)?);
-                    }
-                    _ => return Err(anyhow!("Unsupported function parameter for function call")),
                 }
-            } else {
-                res.push(build_function_arg_from_llvm_directly(parameter)?);
+                Operand::ConstantOperand(constant) => {
+                    res.push(build_function_arg_from_constant(constant)?);
+                }
+                _ => return Err(anyhow!("Unsupported function parameter for function call")),
             }
         }
 
