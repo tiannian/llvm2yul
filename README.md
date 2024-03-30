@@ -41,11 +41,17 @@ Replace function call into builtin
 
 - [X] 64 / 32 bit as primitive type. Primitive type use parameter and return value directly.
 - [ ] Map LLVM IR instruction to yul
-    - [ ] Alloca
-    - [ ] Load
-    - [ ] Store
-    - [ ] Phi
-    - [ ] Call
+    1. [ ] ExtractValue
+    2. [ ] InsertValue
+    3. [ ] Alloca
+    4. [ ] Load
+    5. [ ] Store
+    6. [ ] GetElementPtr
+    7. [ ] PtrToInt
+    8. [ ] IntToPtr
+    9. [ ] Phi
+    10. [ ] Select
+    11. [ ] Call
 - [ ] Map LLVM IR function call to yul.
     - [ ] Use FFI function to map yul builtin function.
     - [ ] allocate function as builtin function
