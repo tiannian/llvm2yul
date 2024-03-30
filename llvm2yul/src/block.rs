@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
 use llvm_ir::{
     instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Load, Phi, Select, Store},
-    BasicBlock, Instruction, Operand,
+    BasicBlock, Instruction, Operand, Type,
 };
-use yuler::{Ident, Statement, VariableDeclare};
+use yuler::{FunctionCall, Ident, Literal, Statement, VariableDeclare};
 
 use crate::{utils, CallCompiler, ExtendedArgsMap};
 
@@ -33,8 +33,6 @@ impl<'a> BlockCompiler<'a> {
             Instruction::Phi(i) => self.compile_phi(i),
             Instruction::Call(i) => self.compile_call(i),
             Instruction::Alloca(i) => self.compile_alloca(i),
-            // Instruction::Load(i) => self.compile_load(i),
-            // Instruction::Store(i) => self.compile_store(i),
             Instruction::Select(i) => self.compile_select(i),
             Instruction::ExtractValue(i) => self.compile_extract_value(i),
             Instruction::InsertValue(i) => self.compile_insert_value(i),
@@ -52,20 +50,47 @@ impl<'a> BlockCompiler<'a> {
 
         compiler.compile_call()
     }
-    fn compile_alloca(&self, inst: &Alloca) -> Result<Statement> {
-        log::debug!("{:#?}", inst);
 
-        Ok(Statement::Break)
+    fn compile_alloca(&self, inst: &Alloca) -> Result<Statement> {
+        let num = if let Type::ArrayType {
+            element_type,
+            num_elements,
+        } = inst.allocated_type.as_ref()
+        {
+            if let Type::IntegerType { bits } = element_type.as_ref() {
+                (bits / 8) * (*num_elements as u32)
+            } else {
+                return Err(anyhow!("Unsupported alloc type: {inst}"));
+            }
+        } else {
+            return Err(anyhow!("Unsupported alloc type: {inst}"));
+        };
+
+        let dest = utils::yul_ident_name(&inst.dest);
+        let value = FunctionCall {
+            name: Ident::new("__yul_allocate")?,
+            args: vec![Literal::int_number(format!("{}", num))?.into()],
+        }
+        .into();
+
+        Ok(VariableDeclare {
+            names: vec![Ident::new(dest)?],
+            value,
+        }
+        .into())
     }
-    fn compile_load(&self, _inst: &Load) -> Result<Statement> {
-        Ok(Statement::Break)
-    }
-    fn compile_store(&self, _inst: &Store) -> Result<Statement> {
-        Ok(Statement::Break)
-    }
+
+    // fn compile_load(&self, _inst: &Load) -> Result<Statement> {
+    //     Ok(Statement::Break)
+    // }
+    // fn compile_store(&self, _inst: &Store) -> Result<Statement> {
+    //     Ok(Statement::Break)
+    // }
+
     fn compile_select(&self, _inst: &Select) -> Result<Statement> {
         Ok(Statement::Break)
     }
+
     fn compile_extract_value(&self, inst: &ExtractValue) -> Result<Statement> {
         // TODO: Add flat deep struct
 
