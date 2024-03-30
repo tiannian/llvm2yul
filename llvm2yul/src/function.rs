@@ -22,13 +22,13 @@ impl<'a> FunctionCompiler<'a> {
 
     pub fn compile_function_header(&mut self) -> Result<()> {
         // Compile function return type
-        let mut rets = utils::build_list_by_type(None, &self.llvm_func.return_type, true)?;
+        let mut rets = utils::flatten_struct_type(None, &self.llvm_func.return_type, true)?;
         self.func.rets.append(&mut rets);
 
         // Compile function header
         // Compile function parameters
         for paramter in &self.llvm_func.parameters {
-            let mut args = utils::build_list_by_type(Some(&paramter.name), &paramter.ty, false)?;
+            let mut args = utils::flatten_struct_type(Some(&paramter.name), &paramter.ty, false)?;
             self.func.args.append(&mut args)
         }
 

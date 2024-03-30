@@ -1,9 +1,9 @@
 use anyhow::{anyhow, Result};
 use llvm_ir::{
-    instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Phi, Select},
-    BasicBlock, Instruction, Operand, Type, TypeRef,
+    instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Phi, PtrToInt, Select},
+    BasicBlock, Constant, Instruction, Operand, Type,
 };
-use yuler::{FunctionCall, Ident, Literal, Statement, VariableDeclare};
+use yuler::{FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
 
 use crate::{utils, CallCompiler, SelectCompiler};
 
@@ -29,27 +29,28 @@ impl<'a> BlockCompiler<'a> {
 
     pub fn compile_inst(&self, inst: &Instruction) -> Result<Vec<Statement>> {
         let res = match inst {
-            Instruction::Phi(i) => vec![self.compile_phi(i)?],
-            Instruction::Call(i) => vec![self.compile_call(i)?],
+            Instruction::Phi(i) => self.compile_phi(i)?,
+            Instruction::Call(i) => self.compile_call(i)?,
             Instruction::Alloca(i) => vec![self.compile_alloca(i)?],
             Instruction::Select(i) => self.compile_select(i)?,
             Instruction::ExtractValue(i) => vec![self.compile_extract_value(i)?],
             Instruction::InsertValue(i) => vec![self.compile_insert_value(i)?],
-            Instruction::IntToPtr(i) => vec![self.compile_int2ptr(i)?],
+            Instruction::IntToPtr(i) => self.compile_int2ptr(i)?,
+            Instruction::PtrToInt(i) => self.compile_ptr2int(i)?,
             _ => return Err(anyhow!("Unsupported instruction: {}", inst)),
         };
 
         Ok(res)
     }
 
-    fn compile_phi(&self, _inst: &Phi) -> Result<Statement> {
-        Ok(Statement::Break)
+    fn compile_phi(&self, _inst: &Phi) -> Result<Vec<Statement>> {
+        Ok(vec![])
     }
 
-    fn compile_call(&self, call: &Call) -> Result<Statement> {
+    fn compile_call(&self, call: &Call) -> Result<Vec<Statement>> {
         let compiler = CallCompiler::new(call);
 
-        compiler.compile_call()
+        Ok(vec![compiler.compile_call()?])
     }
 
     fn compile_alloca(&self, inst: &Alloca) -> Result<Statement> {
@@ -88,7 +89,7 @@ impl<'a> BlockCompiler<'a> {
     }
 
     fn compile_extract_value(&self, inst: &ExtractValue) -> Result<Statement> {
-        // TODO: Add flat deep struct
+        // TODO: Add flat nested struct
 
         if let Operand::LocalOperand { name, ty: _ } = &inst.aggregate {
             if inst.indices.len() == 1 {
@@ -117,11 +118,36 @@ impl<'a> BlockCompiler<'a> {
         }
     }
 
-    fn compile_insert_value(&self, _inst: &InsertValue) -> Result<Statement> {
+    fn compile_insert_value(&self, inst: &InsertValue) -> Result<Statement> {
+        log::info!("{:#?}", inst);
         Ok(Statement::Break)
     }
 
-    fn compile_int2ptr(&self, _inst: &IntToPtr) -> Result<Statement> {
-        Ok(Statement::Break)
+    fn compile_int2ptr(&self, inst: &IntToPtr) -> Result<Vec<Statement>> {
+        let dest = Ident::new(utils::yul_ident_name(&inst.dest))?;
+
+        let value: Value = match &inst.operand {
+            Operand::LocalOperand { name, ty: _ } => {
+                let name = Ident::new(utils::yul_ident_name(name))?;
+
+                name.into()
+            }
+            Operand::ConstantOperand(constant) => match constant.as_ref() {
+                Constant::Int { bits: _, value } => Literal::int_number(format!("{value}"))?.into(),
+                Constant::Null(_) => Literal::int_number("0")?.into(),
+                _ => return Err(anyhow!("Unsupported constant type")),
+            },
+            _ => return Err(anyhow!("Unsupported operand for select")),
+        };
+
+        Ok(vec![VariableDeclare {
+            names: vec![dest],
+            value,
+        }
+        .into()])
+    }
+
+    fn compile_ptr2int(&self, _inst: &PtrToInt) -> Result<Vec<Statement>> {
+        Ok(vec![])
     }
 }

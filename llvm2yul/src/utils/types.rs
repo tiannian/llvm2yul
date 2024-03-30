@@ -52,7 +52,7 @@ fn _iter_type(
     Ok(())
 }
 
-pub fn build_list_by_type(
+pub fn flatten_struct_type(
     name: Option<&Name>,
     ty: &Type,
     void_generated: bool,

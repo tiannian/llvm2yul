@@ -4,17 +4,15 @@ target datalayout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:
 target triple = "x86_64-unknown-linux-gnu"
 
 ; Function Attrs: noinline nounwind nonlazybind
-define { ptr, i64 } @__yul_allocate(i64 noundef %len) unnamed_addr #0 {
+define noundef ptr @__yul_allocate(i64 noundef %len) unnamed_addr #0 {
 start:
   %ptr1 = tail call noundef i64 @__yul_mload(ptr noundef nonnull inttoptr (i64 64 to ptr)) #4
   %_6 = tail call noundef zeroext i1 @__yul_iszero(i64 noundef %ptr1) #4
   %.ptr1 = select i1 %_6, i64 96, i64 %ptr1
   %_8 = tail call noundef i64 @__yul_add(i64 noundef %.ptr1, i64 noundef %len) #4
   tail call void @__yul_mstore(ptr noundef nonnull inttoptr (i64 64 to ptr), i64 noundef %_8) #4
-  %ptr2 = inttoptr i64 %.ptr1 to ptr
-  %0 = insertvalue { ptr, i64 } poison, ptr %ptr2, 0
-  %1 = insertvalue { ptr, i64 } %0, i64 %len, 1
-  ret { ptr, i64 } %1
+  %_0 = inttoptr i64 %.ptr1 to ptr
+  ret ptr %_0
 }
 
 ; Function Attrs: nounwind nonlazybind
@@ -28,13 +26,6 @@ declare noundef i64 @__yul_add(i64 noundef, i64 noundef) unnamed_addr #1
 
 ; Function Attrs: nounwind nonlazybind
 declare void @__yul_mstore(ptr noundef, i64 noundef) unnamed_addr #1
-
-; Function Attrs: nounwind nonlazybind
-define { ptr, i64 } @_ZN11patine_core5alloc8allocate17h72f78d4cb2bfc710E(i64 noundef %len) unnamed_addr #1 {
-start:
-  %0 = tail call { ptr, i64 } @__yul_allocate(i64 noundef %len) #4
-  ret { ptr, i64 } %0
-}
 
 ; Function Attrs: nounwind nonlazybind
 define noundef i64 @_ZN10patine_std8selector8selector17h3fd282a322a88d55E() unnamed_addr #1 {
@@ -62,12 +53,10 @@ start:
   %value = tail call noundef i64 @__yul_caller() #4
   tail call void @__yul_sstore(i64 noundef %position, i64 noundef %value) #4
   %_3 = tail call noundef i64 @__yul_datasize(ptr noundef nonnull @_store_deployed) #4
-  %0 = tail call { ptr, i64 } @_ZN11patine_core5alloc8allocate17h72f78d4cb2bfc710E(i64 noundef %_3) #4
-  %code.0 = extractvalue { ptr, i64 } %0, 0
-  %code.1 = extractvalue { ptr, i64 } %0, 1
+  %ptr.i = tail call noundef ptr @__yul_allocate(i64 noundef %_3) #4
   %offset = tail call noundef i64 @__yul_dataoffset(ptr noundef nonnull @_store_deployed) #4
-  tail call void @__yul_datacopy(ptr noundef %code.0, i64 noundef %offset, i64 noundef %code.1) #4
-  tail call void @__yul_return(ptr noundef %code.0, i64 noundef %code.1) #4
+  tail call void @__yul_datacopy(ptr noundef %ptr.i, i64 noundef %offset, i64 noundef %_3) #4
+  tail call void @__yul_return(ptr noundef %ptr.i, i64 noundef %_3) #4
   ret void
 }
 

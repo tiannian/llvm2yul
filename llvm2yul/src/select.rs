@@ -14,8 +14,6 @@ impl<'a> SelectCompiler<'a> {
     }
 
     pub fn compile(&self) -> Result<Vec<Statement>> {
-        log::debug!("{:#?}", self.select);
-
         let mut res = Vec::new();
 
         let dest = Ident::new(utils::yul_ident_name(&self.select.dest))?;

@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use llvm_ir::{instruction::Call, Constant, Name, Operand, Type};
-use yuler::{Assignment, FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
+use llvm_ir::{instruction::Call, Constant, Operand, Type};
+use yuler::{FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
 
 use crate::utils;
 
@@ -62,7 +62,7 @@ impl<'a> CallCompiler<'a> {
                     is_var_arg: _,
                 } = ty.as_ref()
                 {
-                    let names = utils::build_list_by_type(Some(dest), result_type, false)?;
+                    let names = utils::flatten_struct_type(Some(dest), result_type, false)?;
                     Ok((name, names))
                 } else {
                     Err(anyhow!("must call function"))
@@ -91,7 +91,7 @@ impl<'a> CallCompiler<'a> {
         for (parameter, _) in &self.call.arguments {
             match parameter {
                 Operand::LocalOperand { name, ty } => {
-                    let names = utils::build_list_by_type(Some(name), ty, false)?;
+                    let names = utils::flatten_struct_type(Some(name), ty, false)?;
 
                     for n in names {
                         res.push(n.into())

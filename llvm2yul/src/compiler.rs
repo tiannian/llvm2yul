@@ -16,7 +16,7 @@ impl Compiler {
     pub fn compile_function(&mut self, llvm_func: &Function) -> Result<FunctionDefinition> {
         let mut func_compiler = FunctionCompiler::new(llvm_func)?;
 
-        let extended_args = func_compiler.compile_function_header()?;
+        func_compiler.compile_function_header()?;
 
         func_compiler.compile_function_body()
     }
