@@ -2,19 +2,15 @@ use anyhow::{anyhow, Result};
 use llvm_ir::{instruction::Call, Constant, Name, Operand, Type};
 use yuler::{Assignment, FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
 
-use crate::{utils, ExtendedArgsMap};
+use crate::utils;
 
 pub struct CallCompiler<'a> {
     call: &'a Call,
-    extended_args: &'a ExtendedArgsMap,
 }
 
 impl<'a> CallCompiler<'a> {
-    pub fn new(call: &'a Call, extended_args: &'a ExtendedArgsMap) -> Self {
-        Self {
-            call,
-            extended_args,
-        }
+    pub fn new(call: &'a Call) -> Self {
+        Self { call }
     }
 
     pub fn compile_call(&self) -> Result<Statement> {

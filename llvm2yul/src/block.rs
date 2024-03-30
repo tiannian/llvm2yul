@@ -1,20 +1,19 @@
 use anyhow::{anyhow, Result};
 use llvm_ir::{
-    instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Load, Phi, Select, Store},
-    BasicBlock, Instruction, Operand, Type,
+    instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Phi, Select},
+    BasicBlock, Instruction, Operand, Type, TypeRef,
 };
 use yuler::{FunctionCall, Ident, Literal, Statement, VariableDeclare};
 
-use crate::{utils, CallCompiler, ExtendedArgsMap};
+use crate::{utils, CallCompiler};
 
 pub struct BlockCompiler<'a> {
     bb: &'a BasicBlock,
-    extended_args: &'a ExtendedArgsMap,
 }
 
 impl<'a> BlockCompiler<'a> {
-    pub fn new(bb: &'a BasicBlock, extended_args: &'a ExtendedArgsMap) -> Self {
-        Self { bb, extended_args }
+    pub fn new(bb: &'a BasicBlock) -> Self {
+        Self { bb }
     }
 
     pub fn compile(&self) -> Result<Vec<Statement>> {
@@ -46,7 +45,7 @@ impl<'a> BlockCompiler<'a> {
     }
 
     fn compile_call(&self, call: &Call) -> Result<Statement> {
-        let compiler = CallCompiler::new(call, self.extended_args);
+        let compiler = CallCompiler::new(call);
 
         compiler.compile_call()
     }
@@ -80,14 +79,25 @@ impl<'a> BlockCompiler<'a> {
         .into())
     }
 
-    // fn compile_load(&self, _inst: &Load) -> Result<Statement> {
-    //     Ok(Statement::Break)
-    // }
-    // fn compile_store(&self, _inst: &Store) -> Result<Statement> {
-    //     Ok(Statement::Break)
-    // }
+    fn compile_select(&self, inst: &Select) -> Result<Statement> {
+        log::debug!("{:#?}", inst);
 
-    fn compile_select(&self, _inst: &Select) -> Result<Statement> {
+        let name = if let Operand::LocalOperand { name, ty } = &inst.condition {
+            if let Type::IntegerType { bits: 1 } = ty.as_ref() {
+                Ident::new(utils::yul_ident_name(name))?
+            } else {
+                return Err(anyhow!(
+                    "Fatal Error, condition of select must be i1, {}",
+                    inst.condition
+                ));
+            }
+        } else {
+            return Err(anyhow!(
+                "Fatal Error, condition of select must be i1, {}",
+                inst.condition
+            ));
+        };
+
         Ok(Statement::Break)
     }
 

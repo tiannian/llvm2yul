@@ -5,11 +5,10 @@ use llvm_ir::{Function, Module};
 use llvm_ir_analysis::ModuleAnalysis;
 use yuler::{FunctionCall, FunctionDefinition, Ident, Object};
 
-use crate::{utils, ExtendedArgsMap, FunctionCompiler};
+use crate::{utils, FunctionCompiler};
 
 #[derive(Debug, Default)]
 pub struct Compiler {
-    extended_args: ExtendedArgsMap,
     func_caches: BTreeMap<String, FunctionDefinition>,
 }
 
@@ -18,10 +17,6 @@ impl Compiler {
         let mut func_compiler = FunctionCompiler::new(llvm_func)?;
 
         let extended_args = func_compiler.compile_function_header()?;
-        self.extended_args
-            .insert(llvm_func.name.clone(), extended_args);
-
-        func_compiler.set_extended_args(&self.extended_args);
 
         func_compiler.compile_function_body()
     }
