@@ -52,21 +52,21 @@ Replace function call into builtin
     9. [ ] Phi
     10. [ ] Select
     11. [ ] Call
-- [ ] Map LLVM IR Type to yul
-    1. [ ] Void
-    2. [ ] Integer
-    3. [ ] Pointer
-    4. [ ] Array
-    5. [ ] Struct
-    6. [ ] NamedStruct
+- [X] Map LLVM IR Type to yul
+    1. [X] Void
+    2. [X] Integer
+    3. [X] Pointer
+    4. [X] Array
+    5. [X] Struct
+    6. [X] NamedStruct
 - [ ] Map LLVM IR Constant to yul
-    1. [ ] Int
-    2. [ ] Null
+    1. [X] Int
+    2. [X] Null
     3. [ ] AggregateZero
-    4. [ ] Struct
-    5. [ ] Array
-    6. [ ] GlobalReference
-    7. [ ] Poison
+    4. [X] Struct
+    5. [X] Array
+    6. [X] GlobalReference
+    7. [X] Poison
 - [ ] Flatten LLVM IR Struct or Array
 - [ ] Map LLVM IR function call to yul.
     - [ ] Use FFI function to map yul builtin function.

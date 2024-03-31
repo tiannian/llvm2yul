@@ -13,6 +13,9 @@ pub use insts::*;
 mod types;
 pub use types::*;
 
+mod constant;
+pub use constant::*;
+
 mod config;
 pub use config::*;
 
