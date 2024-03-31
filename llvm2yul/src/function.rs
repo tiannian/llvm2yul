@@ -1,34 +1,39 @@
 use std::collections::BTreeMap;
 
 use anyhow::{anyhow, Result};
-use llvm_ir::Function;
+use llvm_ir::{types::Types, Function};
 use llvm_ir_analysis::FunctionAnalysis;
 use yuler::{FunctionDefinition, Ident};
 
-use crate::{utils, BlockCompiler};
+use crate::{utils, BlockCompiler, TypeFlatter};
 
-#[derive(Debug)]
 pub struct FunctionCompiler<'a> {
     llvm_func: &'a Function,
+    llvm_types: &'a Types,
     func: FunctionDefinition,
 }
 
 impl<'a> FunctionCompiler<'a> {
-    pub fn new(llvm_func: &'a Function) -> Result<Self> {
+    pub fn new(llvm_func: &'a Function, llvm_types: &'a Types) -> Result<Self> {
         let func = FunctionDefinition::new(Ident::new(&llvm_func.name)?);
 
-        Ok(Self { llvm_func, func })
+        Ok(Self {
+            llvm_func,
+            func,
+            llvm_types,
+        })
     }
 
     pub fn compile_function_header(&mut self) -> Result<()> {
         // Compile function return type
-        let mut rets = utils::flatten_struct_type(None, &self.llvm_func.return_type, true)?;
+        let flatter = TypeFlatter::new(self.llvm_types);
+        let mut rets = flatter.flatten_return_type(&self.llvm_func.return_type)?;
         self.func.rets.append(&mut rets);
 
         // Compile function header
         // Compile function parameters
         for paramter in &self.llvm_func.parameters {
-            let mut args = utils::flatten_struct_type(Some(&paramter.name), &paramter.ty, false)?;
+            let mut args = flatter.flatten_parameter(&paramter.name, &paramter.ty)?;
             self.func.args.append(&mut args)
         }
 

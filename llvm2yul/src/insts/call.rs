@@ -40,7 +40,7 @@ impl<'a> CallCompiler<'a> {
         })
     }
 
-    pub fn build_call_function_name_and_rets(&self) -> Result<(String, Vec<Ident>)> {
+    fn build_call_function_name_and_rets(&self) -> Result<(String, Vec<Ident>)> {
         let operand = self
             .call
             .function

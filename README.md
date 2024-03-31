@@ -41,7 +41,7 @@ Replace function call into builtin
 
 - [X] 64 / 32 bit with 256 align as primitive type. Primitive type use parameter and return value directly.
 - [ ] Map LLVM IR instruction to yul
-    1. [ ] ExtractValue
+    1. [X] ExtractValue
     2. [ ] InsertValue
     3. [ ] Alloca
     4. [ ] Load

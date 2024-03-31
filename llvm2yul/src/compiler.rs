@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 
 use anyhow::Result;
-use llvm_ir::{Function, Module};
+use llvm_ir::{types::Types, Function, Module};
 use llvm_ir_analysis::ModuleAnalysis;
 use yuler::{FunctionCall, FunctionDefinition, Ident, Object};
 
@@ -13,8 +13,12 @@ pub struct Compiler {
 }
 
 impl Compiler {
-    pub fn compile_function(&mut self, llvm_func: &Function) -> Result<FunctionDefinition> {
-        let mut func_compiler = FunctionCompiler::new(llvm_func)?;
+    pub fn compile_function(
+        &mut self,
+        llvm_func: &Function,
+        llvm_types: &Types,
+    ) -> Result<FunctionDefinition> {
+        let mut func_compiler = FunctionCompiler::new(llvm_func, llvm_types)?;
 
         func_compiler.compile_function_header()?;
 
@@ -34,7 +38,7 @@ impl Compiler {
         for func in &module.functions {
             if functions.contains(&func.name) || func.name == entry {
                 log::debug!("Compile function: {}", func.name);
-                let function = self.compile_function(func)?;
+                let function = self.compile_function(func, &module.types)?;
 
                 object.code.0.push(function.into());
             }
