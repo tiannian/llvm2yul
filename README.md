@@ -50,7 +50,7 @@ Replace function call into builtin
     7. [X] PtrToInt
     8. [X] IntToPtr
     9. [ ] Phi
-    10. [X] Select
+    10. [ ] Select
     11. [ ] Call
 - [ ] Map LLVM IR Type to yul
     1. [ ] Void

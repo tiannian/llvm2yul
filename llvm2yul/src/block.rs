@@ -2,13 +2,12 @@ use anyhow::{anyhow, Result};
 use llvm_ir::{
     instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Phi, PtrToInt, Select},
     types::Types,
-    BasicBlock, Constant, Instruction, Operand, Type,
+    BasicBlock, Instruction,
 };
-use yuler::{FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
+use yuler::Statement;
 
 use crate::{
-    utils, AllocaCompiler, CallCompiler, Config, ExtractValueCompiler, PtrIntCompiler,
-    SelectCompiler,
+    AllocaCompiler, CallCompiler, Config, ExtractValueCompiler, PtrIntCompiler, SelectCompiler,
 };
 
 pub struct BlockCompiler<'a> {
@@ -58,7 +57,7 @@ impl<'a> BlockCompiler<'a> {
     }
 
     fn compile_call(&self, call: &Call) -> Result<Vec<Statement>> {
-        let compiler = CallCompiler::new(call);
+        let compiler = CallCompiler::new(call, self.llvm_types, self.config);
 
         Ok(vec![compiler.compile_call()?])
     }
@@ -81,7 +80,7 @@ impl<'a> BlockCompiler<'a> {
         compiler.compile()
     }
 
-    fn compile_insert_value(&self, inst: &InsertValue) -> Result<Vec<Statement>> {
+    fn compile_insert_value(&self, _inst: &InsertValue) -> Result<Vec<Statement>> {
         Ok(vec![])
     }
 

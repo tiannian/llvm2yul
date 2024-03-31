@@ -1,16 +1,22 @@
 use anyhow::{anyhow, Result};
-use llvm_ir::{instruction::Call, Constant, Operand, Type};
+use llvm_ir::{instruction::Call, types::Types, Constant, Operand, Type};
 use yuler::{FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
 
-use crate::utils;
+use crate::{utils, Config, TypeFlatter};
 
 pub struct CallCompiler<'a> {
     call: &'a Call,
+    types: &'a Types,
+    config: &'a Config,
 }
 
 impl<'a> CallCompiler<'a> {
-    pub fn new(call: &'a Call) -> Self {
-        Self { call }
+    pub fn new(call: &'a Call, types: &'a Types, config: &'a Config) -> Self {
+        Self {
+            call,
+            config,
+            types,
+        }
     }
 
     pub fn compile_call(&self) -> Result<Statement> {
@@ -62,7 +68,8 @@ impl<'a> CallCompiler<'a> {
                     is_var_arg: _,
                 } = ty.as_ref()
                 {
-                    let names = utils::flatten_struct_type(Some(dest), result_type, false)?;
+                    let flatter = TypeFlatter::new(self.types, self.config);
+                    let names = flatter.flatten_parameter(dest, result_type)?;
                     Ok((name, names))
                 } else {
                     Err(anyhow!("must call function"))
@@ -75,7 +82,8 @@ impl<'a> CallCompiler<'a> {
         }
     }
 
-    pub fn build_call_function_parameters_directly(&self) -> Result<Vec<Value>> {
+    /// Build builtin function call without type flatten
+    pub(crate) fn build_call_function_parameters_directly(&self) -> Result<Vec<Value>> {
         let mut res = Vec::new();
 
         for (arg, _) in &self.call.arguments {
@@ -91,7 +99,8 @@ impl<'a> CallCompiler<'a> {
         for (parameter, _) in &self.call.arguments {
             match parameter {
                 Operand::LocalOperand { name, ty } => {
-                    let names = utils::flatten_struct_type(Some(name), ty, false)?;
+                    let flatter = TypeFlatter::new(self.types, self.config);
+                    let names = flatter.flatten_parameter(name, ty)?;
 
                     for n in names {
                         res.push(n.into())

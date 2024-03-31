@@ -61,6 +61,7 @@ impl<'a> SelectCompiler<'a> {
 
 fn build_operand_value_for_select(operand: &Operand) -> Result<Value> {
     match operand {
+        // TODO: flatten operand
         Operand::LocalOperand { name, ty } => match ty.as_ref() {
             Type::IntegerType { bits: _ } => {
                 let name = Ident::new(yul_ident_name(name))?;
@@ -74,6 +75,7 @@ fn build_operand_value_for_select(operand: &Operand) -> Result<Value> {
             }
             _ => Err(anyhow!("Unsupported local type: {operand}")),
         },
+        // TODO: flatten constant
         Operand::ConstantOperand(constant) => match constant.as_ref() {
             Constant::Int { bits: _, value } => Ok(Literal::int_number(format!("{value}"))?.into()),
             _ => Err(anyhow!("Unsupported constant type: {constant}")),

@@ -7,6 +7,9 @@ pub use select::*;
 mod extractvalue;
 pub use extractvalue::*;
 
+mod insertvalue;
+pub use insertvalue::*;
+
 mod alloc;
 pub use alloc::*;
 

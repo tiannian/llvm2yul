@@ -34,7 +34,7 @@ impl<'a> ExtractValueCompiler<'a> {
     }
 }
 
-fn build_from_name(name: &Name, indices: &[u32]) -> Result<Ident> {
+pub(crate) fn build_from_name(name: &Name, indices: &[u32]) -> Result<Ident> {
     let name = utils::yul_ident_name(name);
     let name = utils::tidy_name(&name);
 

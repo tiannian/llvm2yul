@@ -64,7 +64,7 @@ impl<'a> TypeFlatter<'a> {
             } => {
                 let e = element_type.as_ref();
                 for i in 0..*num_elements {
-                    let added_name = format!("{}_a{}", name, i);
+                    let added_name = format!("{}_{}", name, i);
 
                     self._iter_type(tokens, &added_name, e, void_generated)?;
                 }
@@ -76,7 +76,7 @@ impl<'a> TypeFlatter<'a> {
                 for (i, e) in element_types.iter().enumerate() {
                     let e = e.as_ref();
 
-                    let added_name = format!("{}_s{}", name, i);
+                    let added_name = format!("{}_{}", name, i);
 
                     self._iter_type(tokens, &added_name, e, void_generated)?;
                 }
