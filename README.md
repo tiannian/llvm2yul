@@ -67,7 +67,7 @@ Replace function call into builtin
     5. [X] Array
     6. [X] GlobalReference
     7. [X] Poison
-- [ ] Flatten LLVM IR Struct or Array
+- [X] Flatten LLVM IR Struct or Array
 - [ ] Map LLVM IR function call to yul.
     - [ ] Use FFI function to map yul builtin function.
     - [ ] allocate function as builtin function
@@ -80,6 +80,6 @@ Replace function call into builtin
 - [X] Map LLVM IR funtion to yul
     - [X] Primitive parameter type
     - [X] Primitive return type
-    - [ ] Nested struct parameter and return support.
+    - [X] Nested struct parameter and return support.
 - [ ] Make unsupported display clearily
 
