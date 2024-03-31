@@ -5,15 +5,16 @@ use llvm_ir::{
 };
 use yuler::Ident;
 
-use crate::utils;
+use crate::{utils, Config};
 
 pub struct TypeFlatter<'a> {
     types: &'a Types,
+    config: &'a Config,
 }
 
 impl<'a> TypeFlatter<'a> {
-    pub fn new(types: &'a Types) -> Self {
-        Self { types }
+    pub fn new(types: &'a Types, config: &'a Config) -> Self {
+        Self { types, config }
     }
 
     pub fn flatten_parameter(&self, name: &Name, ty: &Type) -> Result<Vec<Ident>> {
@@ -81,15 +82,21 @@ impl<'a> TypeFlatter<'a> {
                 }
             }
             Type::NamedStructType { name } => {
-                let ty = self
-                    .types
-                    .named_struct_def(name)
-                    .ok_or(anyhow!("Linked error, failed to get named struct type."))?;
+                let name = &name.to_string();
 
-                if let NamedStructDef::Defined(ty) = ty {
-                    self._iter_type(tokens, name, ty, void_generated)?;
+                if self.config.basic_types.contains(name) {
+                    tokens.push(ident);
                 } else {
-                    return Err(anyhow!("Linked error, no opaque supported"));
+                    let ty = self
+                        .types
+                        .named_struct_def(name)
+                        .ok_or(anyhow!("Linked error, failed to get named struct type."))?;
+
+                    if let NamedStructDef::Defined(ty) = ty {
+                        self._iter_type(tokens, name, ty, void_generated)?;
+                    } else {
+                        return Err(anyhow!("Linked error, no opaque supported"));
+                    }
                 }
             }
             _ => return Err(anyhow!("Unspported Type: {}", ty)),

@@ -5,28 +5,30 @@ use llvm_ir::{types::Types, Function};
 use llvm_ir_analysis::FunctionAnalysis;
 use yuler::{FunctionDefinition, Ident};
 
-use crate::{utils, BlockCompiler, TypeFlatter};
+use crate::{utils, BlockCompiler, Config, TypeFlatter};
 
 pub struct FunctionCompiler<'a> {
     llvm_func: &'a Function,
     llvm_types: &'a Types,
+    config: &'a Config,
     func: FunctionDefinition,
 }
 
 impl<'a> FunctionCompiler<'a> {
-    pub fn new(llvm_func: &'a Function, llvm_types: &'a Types) -> Result<Self> {
+    pub fn new(llvm_func: &'a Function, llvm_types: &'a Types, config: &'a Config) -> Result<Self> {
         let func = FunctionDefinition::new(Ident::new(&llvm_func.name)?);
 
         Ok(Self {
             llvm_func,
             func,
+            config,
             llvm_types,
         })
     }
 
     pub fn compile_function_header(&mut self) -> Result<()> {
         // Compile function return type
-        let flatter = TypeFlatter::new(self.llvm_types);
+        let flatter = TypeFlatter::new(self.llvm_types, self.config);
         let mut rets = flatter.flatten_return_type(&self.llvm_func.return_type)?;
         self.func.rets.append(&mut rets);
 
@@ -47,7 +49,7 @@ impl<'a> FunctionCompiler<'a> {
             for bb in &self.llvm_func.basic_blocks {
                 log::debug!("Compile block: {}", bb.name);
 
-                let block_compiler = BlockCompiler::new(bb);
+                let block_compiler = BlockCompiler::new(bb, self.llvm_types);
 
                 let block = block_compiler.compile()?;
 

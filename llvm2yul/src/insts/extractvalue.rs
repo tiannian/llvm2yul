@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use llvm_ir::{instruction::ExtractValue, Name, Operand, Type};
 use yuler::{Ident, Statement, VariableDeclare};
 
-use crate::utils;
+use crate::{error, utils};
 
 pub struct ExtractValueCompiler<'a> {
     inst: &'a ExtractValue,
@@ -56,8 +56,8 @@ fn check_arg(ty: &Operand) -> Result<Name> {
                 element_type: _,
                 num_elements: _,
             } => Ok(name.clone()),
-            _ => Err(anyhow!("Fatal: Wrong arguments for extractvalue")),
+            _ => Err(anyhow!("{} extractvalue: {}", error::WRONG_ARG, ty)),
         },
-        _ => Err(anyhow!("Fatal: Wrong arguments for extractvalue")),
+        _ => Err(anyhow!("{} extractvalue: {}", error::WRONG_ARG, ty)),
     }
 }

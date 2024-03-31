@@ -1,19 +1,21 @@
 use anyhow::{anyhow, Result};
 use llvm_ir::{
     instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Phi, PtrToInt, Select},
+    types::Types,
     BasicBlock, Constant, Instruction, Operand, Type,
 };
 use yuler::{FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
 
-use crate::{utils, CallCompiler, ExtractValueCompiler, SelectCompiler};
+use crate::{utils, AllocaCompiler, CallCompiler, ExtractValueCompiler, SelectCompiler};
 
 pub struct BlockCompiler<'a> {
     bb: &'a BasicBlock,
+    llvm_types: &'a Types,
 }
 
 impl<'a> BlockCompiler<'a> {
-    pub fn new(bb: &'a BasicBlock) -> Self {
-        Self { bb }
+    pub fn new(bb: &'a BasicBlock, llvm_types: &'a Types) -> Self {
+        Self { bb, llvm_types }
     }
 
     pub fn compile(&self) -> Result<Vec<Statement>> {
@@ -47,14 +49,17 @@ impl<'a> BlockCompiler<'a> {
         Ok(vec![])
     }
 
-    fn compile_call(&self, _call: &Call) -> Result<Vec<Statement>> {
-        // let compiler = CallCompiler::new(call);
-        //
-        // Ok(vec![compiler.compile_call()?])
-        Ok(vec![])
+    fn compile_call(&self, call: &Call) -> Result<Vec<Statement>> {
+        let compiler = CallCompiler::new(call);
+
+        Ok(vec![compiler.compile_call()?])
     }
 
     fn compile_alloca(&self, inst: &Alloca) -> Result<Vec<Statement>> {
+        let compiler = AllocaCompiler::new(inst, self.llvm_types);
+
+        compiler.compile()
+
         // let num = if let Type::ArrayType {
         //     element_type,
         //     num_elements,
@@ -81,7 +86,6 @@ impl<'a> BlockCompiler<'a> {
         //     value,
         // }
         // .into())
-        Ok(vec![])
     }
 
     fn compile_select(&self, inst: &Select) -> Result<Vec<Statement>> {

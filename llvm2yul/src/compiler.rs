@@ -5,11 +5,13 @@ use llvm_ir::{types::Types, Function, Module};
 use llvm_ir_analysis::ModuleAnalysis;
 use yuler::{FunctionCall, FunctionDefinition, Ident, Object};
 
-use crate::{utils, FunctionCompiler};
+use crate::{utils, Config, FunctionCompiler};
 
 #[derive(Debug, Default)]
 pub struct Compiler {
     func_caches: BTreeMap<String, FunctionDefinition>,
+
+    config: Config,
 }
 
 impl Compiler {
@@ -18,7 +20,7 @@ impl Compiler {
         llvm_func: &Function,
         llvm_types: &Types,
     ) -> Result<FunctionDefinition> {
-        let mut func_compiler = FunctionCompiler::new(llvm_func, llvm_types)?;
+        let mut func_compiler = FunctionCompiler::new(llvm_func, llvm_types, &self.config)?;
 
         func_compiler.compile_function_header()?;
 

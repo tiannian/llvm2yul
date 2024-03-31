@@ -13,4 +13,9 @@ pub use insts::*;
 mod types;
 pub use types::*;
 
+mod config;
+pub use config::*;
+
 pub mod utils;
+
+pub mod error;
