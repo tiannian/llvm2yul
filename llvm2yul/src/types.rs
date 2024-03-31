@@ -5,7 +5,7 @@ use llvm_ir::{
 };
 use yuler::Ident;
 
-use crate::{utils, Config};
+use crate::{error, utils, Config};
 
 pub struct TypeFlatter<'a> {
     types: &'a Types,
@@ -99,9 +99,76 @@ impl<'a> TypeFlatter<'a> {
                     }
                 }
             }
-            _ => return Err(anyhow!("Unspported Type: {}", ty)),
+            _ => {
+                return Err(anyhow!(
+                    "{} flatten failed: {}",
+                    error::UNSUPPERTED_OPERAND,
+                    ty
+                ))
+            }
         }
 
         Ok(())
+    }
+
+    pub fn compute_size(&self, ty: &Type) -> Result<u64> {
+        _compute_size(ty, self.types, self.config)
+    }
+}
+
+fn _compute_size(ty: &Type, types: &Types, config: &Config) -> Result<u64> {
+    match ty {
+        Type::VoidType => Ok(0),
+        Type::IntegerType { bits } => {
+            if *bits <= 8 {
+                Ok(1)
+            } else {
+                Ok(32)
+            }
+        }
+        Type::PointerType { addr_space: _ } => Ok(32),
+        Type::ArrayType {
+            element_type,
+            num_elements,
+        } => {
+            let size = _compute_size(element_type, types, config)?;
+            Ok(size * (*num_elements) as u64)
+        }
+        Type::StructType {
+            element_types,
+            is_packed: _,
+        } => {
+            let mut total_size = 0;
+
+            for ty in element_types {
+                let size = _compute_size(ty, types, config)?;
+                total_size += size
+            }
+
+            Ok(total_size)
+        }
+        Type::NamedStructType { name } => {
+            if config.basic_types.contains(name) {
+                Ok(32)
+            } else {
+                let ty0 = types.named_struct_def(name).ok_or(anyhow!(
+                    "{} flatten failed: {}",
+                    error::WRONG_ARG,
+                    ty
+                ))?;
+
+                if let NamedStructDef::Defined(ty) = ty0 {
+                    let size = _compute_size(ty, types, config)?;
+                    Ok(size)
+                } else {
+                    Err(anyhow!("{} flatten failed: {}", error::WRONG_ARG, ty))
+                }
+            }
+        }
+        _ => Err(anyhow!(
+            "{} flatten failed: {}",
+            error::UNSUPPERTED_OPERAND,
+            ty
+        )),
     }
 }

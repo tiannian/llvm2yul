@@ -43,14 +43,14 @@ Replace function call into builtin
 - [ ] Map LLVM IR instruction to yul
     1. [X] ExtractValue
     2. [ ] InsertValue
-    3. [ ] Alloca
+    3. [X] Alloca
     4. [ ] Load
     5. [ ] Store
     6. [ ] GetElementPtr
-    7. [ ] PtrToInt
-    8. [ ] IntToPtr
+    7. [X] PtrToInt
+    8. [X] IntToPtr
     9. [ ] Phi
-    10. [ ] Select
+    10. [X] Select
     11. [ ] Call
 - [ ] Map LLVM IR Type to yul
     1. [ ] Void

@@ -9,3 +9,6 @@ pub use extractvalue::*;
 
 mod alloc;
 pub use alloc::*;
+
+mod ptr_int;
+pub use ptr_int::*;

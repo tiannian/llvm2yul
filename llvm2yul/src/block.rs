@@ -6,16 +6,24 @@ use llvm_ir::{
 };
 use yuler::{FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
 
-use crate::{utils, AllocaCompiler, CallCompiler, ExtractValueCompiler, SelectCompiler};
+use crate::{
+    utils, AllocaCompiler, CallCompiler, Config, ExtractValueCompiler, PtrIntCompiler,
+    SelectCompiler,
+};
 
 pub struct BlockCompiler<'a> {
     bb: &'a BasicBlock,
     llvm_types: &'a Types,
+    config: &'a Config,
 }
 
 impl<'a> BlockCompiler<'a> {
-    pub fn new(bb: &'a BasicBlock, llvm_types: &'a Types) -> Self {
-        Self { bb, llvm_types }
+    pub fn new(bb: &'a BasicBlock, llvm_types: &'a Types, config: &'a Config) -> Self {
+        Self {
+            bb,
+            llvm_types,
+            config,
+        }
     }
 
     pub fn compile(&self) -> Result<Vec<Statement>> {
@@ -56,43 +64,15 @@ impl<'a> BlockCompiler<'a> {
     }
 
     fn compile_alloca(&self, inst: &Alloca) -> Result<Vec<Statement>> {
-        let compiler = AllocaCompiler::new(inst, self.llvm_types);
+        let compiler = AllocaCompiler::new(inst, self.llvm_types, self.config);
 
         compiler.compile()
-
-        // let num = if let Type::ArrayType {
-        //     element_type,
-        //     num_elements,
-        // } = inst.allocated_type.as_ref()
-        // {
-        //     if let Type::IntegerType { bits } = element_type.as_ref() {
-        //         (bits / 8) * (*num_elements as u32)
-        //     } else {
-        //         return Err(anyhow!("Unsupported alloc type: {inst}"));
-        //     }
-        // } else {
-        //     return Err(anyhow!("Unsupported alloc type: {inst}"));
-        // };
-        //
-        // let dest = utils::yul_ident_name(&inst.dest);
-        // let value = FunctionCall {
-        //     name: Ident::new("__yul_allocate")?,
-        //     args: vec![Literal::int_number(format!("{}", num))?.into()],
-        // }
-        // .into();
-        //
-        // Ok(VariableDeclare {
-        //     names: vec![Ident::new(dest)?],
-        //     value,
-        // }
-        // .into())
     }
 
     fn compile_select(&self, inst: &Select) -> Result<Vec<Statement>> {
-        // let select = SelectCompiler::new(inst);
+        let select = SelectCompiler::new(inst);
 
-        // select.compile()
-        Ok(vec![])
+        select.compile()
     }
 
     fn compile_extract_value(&self, inst: &ExtractValue) -> Result<Vec<Statement>> {
@@ -106,31 +86,14 @@ impl<'a> BlockCompiler<'a> {
     }
 
     fn compile_int2ptr(&self, inst: &IntToPtr) -> Result<Vec<Statement>> {
-        // let dest = Ident::new(utils::yul_ident_name(&inst.dest))?;
-        //
-        // let value: Value = match &inst.operand {
-        //     Operand::LocalOperand { name, ty: _ } => {
-        //         let name = Ident::new(utils::yul_ident_name(name))?;
-        //
-        //         name.into()
-        //     }
-        //     Operand::ConstantOperand(constant) => match constant.as_ref() {
-        //         Constant::Int { bits: _, value } => Literal::int_number(format!("{value}"))?.into(),
-        //         Constant::Null(_) => Literal::int_number("0")?.into(),
-        //         _ => return Err(anyhow!("Unsupported constant type")),
-        //     },
-        //     _ => return Err(anyhow!("Unsupported operand for select")),
-        // };
-        //
-        // Ok(vec![VariableDeclare {
-        //     names: vec![dest],
-        //     value,
-        // }
-        // .into()])
-        Ok(vec![])
+        let compiler = PtrIntCompiler::new(&inst.operand, &inst.dest);
+
+        compiler.compile()
     }
 
-    fn compile_ptr2int(&self, _inst: &PtrToInt) -> Result<Vec<Statement>> {
-        Ok(vec![])
+    fn compile_ptr2int(&self, inst: &PtrToInt) -> Result<Vec<Statement>> {
+        let compiler = PtrIntCompiler::new(&inst.operand, &inst.dest);
+
+        compiler.compile()
     }
 }

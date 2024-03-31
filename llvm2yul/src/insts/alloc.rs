@@ -1,30 +1,47 @@
 use anyhow::{anyhow, Result};
-use llvm_ir::{instruction::Alloca, types::Types, Constant, Operand, Type};
-use yuler::Statement;
+use llvm_ir::{instruction::Alloca, types::Types, Constant, Operand};
+use yuler::{FunctionCall, Ident, Literal, Statement, VariableDeclare};
 
-use crate::error;
+use crate::{error, utils, Config, TypeFlatter};
 
 pub struct AllocaCompiler<'a> {
     inst: &'a Alloca,
     types: &'a Types,
+    config: &'a Config,
 }
 
 impl<'a> AllocaCompiler<'a> {
-    pub fn new(inst: &'a Alloca, types: &'a Types) -> Self {
-        Self { inst, types }
+    pub fn new(inst: &'a Alloca, types: &'a Types, config: &'a Config) -> Self {
+        Self {
+            inst,
+            types,
+            config,
+        }
     }
 
     pub fn compile(&self) -> Result<Vec<Statement>> {
-        log::debug!("{:#?}", self.inst);
+        let flatter = TypeFlatter::new(self.types, self.config);
+        let size = flatter.compute_size(&self.inst.allocated_type)?;
 
-        let mut res = Vec::new();
+        let num_elem = build_num_elements(&self.inst.num_elements)?;
 
-        Ok(res)
+        let total_size = size * num_elem;
+
+        let dest = utils::yul_ident_name(&self.inst.dest);
+        let dest = Ident::new(utils::tidy_name(&dest))?;
+
+        let value = FunctionCall {
+            name: Ident::new("__yul_allocate")?,
+            args: vec![Literal::int_number(format!("{}", total_size))?.into()],
+        }
+        .into();
+
+        Ok(vec![VariableDeclare {
+            names: vec![dest],
+            value,
+        }
+        .into()])
     }
-}
-
-fn compute_size(ty: &Type, types: &Types) -> Result<u64> {
-    Ok(0)
 }
 
 fn build_num_elements(num: &Operand) -> Result<u64> {
