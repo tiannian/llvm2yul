@@ -42,7 +42,9 @@ impl<'a> FunctionCompiler<'a> {
         Ok(())
     }
 
-    pub fn compile_function_body(self) -> Result<FunctionDefinition> {
+    pub fn compile_function_body(self) -> Result<(FunctionDefinition, Vec<String>)> {
+        let mut objects = Vec::new();
+
         let mut blocks = BTreeMap::new();
         // Compile all blocks
         {
@@ -52,6 +54,10 @@ impl<'a> FunctionCompiler<'a> {
                 let mut block_compiler = BlockCompiler::new(bb, self.llvm_types, self.config);
 
                 let block = block_compiler.compile()?;
+
+                if let Some(obj) = block_compiler.objects.pop_first() {
+                    objects.push(obj);
+                }
 
                 blocks.insert(utils::yul_ident_name(&bb.name), block);
             }
@@ -76,6 +82,6 @@ impl<'a> FunctionCompiler<'a> {
             func
         };
 
-        Ok(func)
+        Ok((func, objects))
     }
 }

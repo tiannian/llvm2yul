@@ -9,7 +9,7 @@ pub struct CallCompiler<'a> {
     call: &'a Call,
     types: &'a Types,
     config: &'a Config,
-    pub(crate) object: Option<Ident>,
+    pub(crate) object: Option<String>,
 }
 
 impl<'a> CallCompiler<'a> {
@@ -39,6 +39,8 @@ impl<'a> CallCompiler<'a> {
             self.build_call_function_parameters()?
         };
 
+        self.object = build_object_entry(&func_call)?;
+
         if let Some(res) = convert_literal(&func_call)? {
             return Ok(VariableDeclare {
                 names: rets,
@@ -47,7 +49,7 @@ impl<'a> CallCompiler<'a> {
             .into());
         }
 
-        self.object = convert_builtin(&mut func_call)?;
+        convert_builtin(&mut func_call)?;
 
         Ok(if rets.is_empty() {
             func_call.into()
@@ -152,6 +154,24 @@ impl<'a> CallCompiler<'a> {
     }
 }
 
+fn build_object_entry(function_call: &FunctionCall) -> Result<Option<String>> {
+    let s = function_call.name.0.as_str();
+
+    if s == "__yul_datasize" || s == "__yul_dataoffset" {
+        let arg = &function_call.args[0];
+
+        let r = arg
+            .as_literal()
+            .expect("Wrong argument type")
+            .as_ascii()
+            .expect("Wrong argument type");
+
+        Ok(Some(r.into()))
+    } else {
+        Ok(None)
+    }
+}
+
 fn convert_literal(function_call: &FunctionCall) -> Result<Option<Literal>> {
     if function_call.name.0.as_str() == "__yul__ext_literal" {
         let r0 = function_call.args[0]
@@ -188,19 +208,19 @@ fn convert_literal(function_call: &FunctionCall) -> Result<Option<Literal>> {
     }
 }
 
-fn convert_builtin(function_call: &mut FunctionCall) -> Result<Option<Ident>> {
+fn convert_builtin(function_call: &mut FunctionCall) -> Result<()> {
     let name = function_call.name.0.clone();
 
     match name.as_str() {
         "__yul__ext_literal" => {}
-        "__yul_datasize" => {
-            function_call.name.0 = "datasize".into();
-            return Ok(Some(Ident::new(name)?));
-        }
-        "__yul_dataoffset" => {
-            function_call.name.0 = "dataoffset".into();
-            return Ok(Some(Ident::new(name)?));
-        }
+        // "__yul_datasize" => {
+        //     // function_call.name.0 = "datasize".into();
+        //     // return Ok(Some());
+        // }
+        // "__yul_dataoffset" => {
+        //     function_call.name.0 = "dataoffset".into();
+        //     return Ok(Some(name));
+        // }
         _ => {
             if let Some(num_args) = utils::builtin_args_num(&name) {
                 if function_call.args.len() != num_args {
@@ -219,5 +239,5 @@ fn convert_builtin(function_call: &mut FunctionCall) -> Result<Option<Ident>> {
         }
     }
 
-    Ok(None)
+    Ok(())
 }

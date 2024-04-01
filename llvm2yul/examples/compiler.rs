@@ -18,13 +18,5 @@ fn main() -> Result<()> {
 
     println!("{}", String::from_utf8(writer.w)?);
 
-    let object = compiler.compile_object(&module, "_store_deployed")?;
-
-    let res = Vec::new();
-    let mut writer = Writer::new(res, "    ");
-    object.write(&mut writer)?;
-
-    println!("{}", String::from_utf8(writer.w)?);
-
     Ok(())
 }

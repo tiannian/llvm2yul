@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use crate::{Block, HexLiteral, Ident, Writer};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Object {
     pub name: Ident,
     pub code: Block,
@@ -12,7 +12,7 @@ pub struct Object {
     pub objects: Vec<Object>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Data {
     pub name: Ident,
     pub data: HexLiteral,
@@ -51,7 +51,12 @@ impl Object {
         }
         w.write_end()?;
 
+        for o in &self.objects {
+            o.write(w)?;
+        }
+
         w.leave_block();
+        w.write_end()?;
         w.write_str("}")?;
 
         Ok(())

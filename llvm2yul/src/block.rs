@@ -1,10 +1,12 @@
+use std::collections::BTreeSet;
+
 use anyhow::{anyhow, Result};
 use llvm_ir::{
     instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Phi, PtrToInt, Select},
     types::Types,
     BasicBlock, Instruction,
 };
-use yuler::{Ident, Statement};
+use yuler::Statement;
 
 use crate::{
     AllocaCompiler, CallCompiler, Config, ExtractValueCompiler, PtrIntCompiler, SelectCompiler,
@@ -14,7 +16,7 @@ pub struct BlockCompiler<'a> {
     bb: &'a BasicBlock,
     llvm_types: &'a Types,
     config: &'a Config,
-    objects: Vec<Ident>,
+    pub(crate) objects: BTreeSet<String>,
 }
 
 impl<'a> BlockCompiler<'a> {
@@ -24,7 +26,7 @@ impl<'a> BlockCompiler<'a> {
             llvm_types,
             config,
 
-            objects: Vec::new(),
+            objects: Default::default(),
         }
     }
 
@@ -65,7 +67,7 @@ impl<'a> BlockCompiler<'a> {
         let stmt = compiler.compile_call()?;
 
         if let Some(object) = compiler.object {
-            self.objects.push(object);
+            self.objects.insert(object);
         }
 
         Ok(vec![stmt])

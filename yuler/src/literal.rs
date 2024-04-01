@@ -55,6 +55,13 @@ impl Literal {
             _ => None,
         }
     }
+
+    pub fn as_ascii(&self) -> Option<&str> {
+        match self {
+            Literal::ASCII(n) => Some(&n.0),
+            _ => None,
+        }
+    }
 }
 
 pub mod literals {
