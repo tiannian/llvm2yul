@@ -78,11 +78,11 @@ Replace function call into builtin
     - [ ] Use FFI function to map yul builtin function.
     - [ ] allocate function as builtin function
 - [ ] Map block termiantor to control flow.
-    - [X] Ret (leave)
+    - [ ] Ret (leave)
     - [ ] Br
     - [ ] CondBr
     - [ ] Switch (switch)
-    - [X] Unreachable (invaild)
+    - [ ] Unreachable (invaild)
 - [X] Map LLVM IR funtion to yul
     - [X] Primitive parameter type
     - [X] Primitive return type
