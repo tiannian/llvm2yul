@@ -2,6 +2,12 @@
 
 > Convertor from LLVM to Yul
 
+## Standard Library
+
+If you want to build using LLVM frontend, please use corresponding language.
+
+- Rust: [patine](https://github.com/tiannian/patine)
+
 ## Passes Design
 
 ### Compile Object
