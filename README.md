@@ -4,7 +4,7 @@
 
 ## Standard Library
 
-If you want to build using LLVM frontend, please use corresponding language.
+If you want to build using LLVM frontend, please use corresponding language standard library.
 
 - Rust: [patine](https://github.com/tiannian/patine)
 
