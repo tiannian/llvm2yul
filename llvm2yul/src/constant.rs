@@ -24,10 +24,8 @@ impl<'a> ConstantFlatter<'a> {
 
     fn _flatten(&self, values: &mut Vec<Value>, constant: &Constant) -> Result<()> {
         match constant {
-            Constant::Int { bits: _, value } => {
-                values.push(Literal::int_number(format!("{value}"))?.into())
-            }
-            Constant::Null(_) => values.push(Literal::int_number("0")?.into()),
+            Constant::Int { bits: _, value } => values.push(Literal::int_number(*value)?.into()),
+            Constant::Null(_) => values.push(Literal::int_number(0)?.into()),
             Constant::AggregateZero(ty) => self._build_type_values(values, ty)?,
             Constant::Struct {
                 name: _,
@@ -71,7 +69,7 @@ impl<'a> ConstantFlatter<'a> {
         let res = flatter.flatten_return_type(ty)?;
 
         for _ in 0..res.len() {
-            values.push(Literal::int_number("0")?.into())
+            values.push(Literal::int_number(0)?.into())
         }
 
         Ok(())

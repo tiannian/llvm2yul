@@ -24,8 +24,8 @@ impl<'a> PtrIntCompiler<'a> {
                 name.into()
             }
             Operand::ConstantOperand(constant) => match constant.as_ref() {
-                Constant::Int { bits: _, value } => Literal::int_number(format!("{value}"))?.into(),
-                Constant::Null(_) => Literal::int_number("0")?.into(),
+                Constant::Int { bits: _, value } => Literal::int_number(*value)?.into(),
+                Constant::Null(_) => Literal::int_number(0)?.into(),
                 _ => return Err(anyhow!("Unsupported constant type")),
             },
             _ => return Err(anyhow!("Unsupported operand for select")),

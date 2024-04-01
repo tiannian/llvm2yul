@@ -1,8 +1,9 @@
 use anyhow::{anyhow, Result};
 use llvm_ir::{instruction::Call, types::Types, Constant, Operand, Type};
+use primitive_types::U256;
 use yuler::{FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
 
-use crate::{utils, Config, ConstantFlatter, TypeFlatter};
+use crate::{error, utils, Config, ConstantFlatter, TypeFlatter};
 
 pub struct CallCompiler<'a> {
     call: &'a Call,
@@ -34,6 +35,15 @@ impl<'a> CallCompiler<'a> {
             // on map of args
             self.build_call_function_parameters()?
         };
+
+        if let Some(res) = convert_literal(&func_call)? {
+            return Ok(VariableDeclare {
+                names: rets,
+                value: res.into(),
+            }
+            .into());
+        }
+        let res = convert_builtin(&mut func_call)?;
 
         Ok(if rets.is_empty() {
             func_call.into()
@@ -136,4 +146,74 @@ impl<'a> CallCompiler<'a> {
 
         flatter.flatten(constant)
     }
+}
+
+fn convert_literal(function_call: &FunctionCall) -> Result<Option<Literal>> {
+    if function_call.name.0.as_str() == "__yul__ext_literal" {
+        let r0 = function_call.args[0]
+            .as_literal()
+            .expect("Wrong argument type")
+            .as_number()
+            .expect("Wrong argument type");
+
+        let r1 = function_call.args[1]
+            .as_literal()
+            .expect("Wrong argument type")
+            .as_number()
+            .expect("Wrong argument type");
+
+        let r2 = function_call.args[2]
+            .as_literal()
+            .expect("Wrong argument type")
+            .as_number()
+            .expect("Wrong argument type");
+
+        let r3 = function_call.args[3]
+            .as_literal()
+            .expect("Wrong argument type")
+            .as_number()
+            .expect("Wrong argument type");
+
+        let res = U256([r3, r2, r1, r0]);
+
+        let res = format!("{:#x}", res);
+
+        Ok(Some(Literal::hex_number(res)?))
+    } else {
+        Ok(None)
+    }
+}
+
+fn convert_builtin(function_call: &mut FunctionCall) -> Result<Option<Ident>> {
+    let name = function_call.name.0.clone();
+
+    match name.as_str() {
+        "__yul__ext_literal" => {}
+        "__yul_datasize" => {
+            function_call.name.0 = "datasize".into();
+            return Ok(Some(Ident::new(name)?));
+        }
+        "__yul_dataoffset" => {
+            function_call.name.0 = "dataoffset".into();
+            return Ok(Some(Ident::new(name)?));
+        }
+        _ => {
+            if let Some(num_args) = utils::builtin_args_num(&name) {
+                if function_call.args.len() != num_args {
+                    return Err(anyhow!(
+                        "{} call builtin arguments: {name}",
+                        error::WRONG_ARG
+                    ));
+                }
+
+                let res = name
+                    .strip_prefix("__yul_")
+                    .ok_or(anyhow!("{} call builtin prefix: {name}", error::WRONG_ARG))?;
+
+                function_call.name.0 = res.into()
+            }
+        }
+    }
+
+    Ok(None)
 }

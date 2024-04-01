@@ -5,6 +5,8 @@ use lazy_static::lazy_static;
 use literals::{ASCIILiteral, NumberLiteral};
 use regex::Regex;
 
+use self::literals::HexNumberLiteral;
+
 lazy_static! {
     static ref HEX_LITERAL: Regex = Regex::new(r"^[0-9A-Fa-f]+$").unwrap();
     static ref INT_LITERAL: Regex = Regex::new(r"^-?[0-9]+$").unwrap();
@@ -14,25 +16,20 @@ lazy_static! {
 #[derive(Debug, Clone)]
 pub enum Literal {
     Number(NumberLiteral),
+    HexNumber(HexNumberLiteral),
     ASCII(ASCIILiteral),
 }
 
 impl Literal {
-    pub fn int_number(s: impl Into<String>) -> Result<Self> {
-        let s = s.into();
-
-        if INT_LITERAL.is_match(&s) {
-            Ok(Self::Number(NumberLiteral(s)))
-        } else {
-            Err(anyhow!("Wrong format of number"))
-        }
+    pub fn int_number(s: u64) -> Result<Self> {
+        Ok(Self::Number(NumberLiteral(s)))
     }
 
     pub fn hex_number(s: impl Into<String>) -> Result<Self> {
         let s = s.into();
 
         if HEX_NUMBER_LITERAL.is_match(&s) {
-            Ok(Self::Number(NumberLiteral(s)))
+            Ok(Self::HexNumber(HexNumberLiteral(s)))
         } else {
             Err(anyhow!("Wrong format of number"))
         }
@@ -47,7 +44,15 @@ impl Literal {
     pub fn write(&self, w: &mut impl Write) -> Result<()> {
         match self {
             Self::Number(v) => v.write(w),
+            Self::HexNumber(v) => v.write(w),
             Self::ASCII(v) => v.write(w),
+        }
+    }
+
+    pub fn as_number(&self) -> Option<u64> {
+        match self {
+            Literal::Number(n) => Some(n.0),
+            _ => None,
         }
     }
 }
@@ -58,11 +63,21 @@ pub mod literals {
     use anyhow::Result;
 
     #[derive(Debug, Clone)]
-    pub struct NumberLiteral(pub(crate) String);
+    pub struct NumberLiteral(pub(crate) u64);
 
     impl NumberLiteral {
         pub fn write(&self, w: &mut impl Write) -> Result<()> {
-            w.write_all(self.0.as_bytes())?;
+            w.write_all(format!("{}", self.0).as_bytes())?;
+            Ok(())
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct HexNumberLiteral(pub(crate) String);
+
+    impl HexNumberLiteral {
+        pub fn write(&self, w: &mut impl Write) -> Result<()> {
+            w.write_all(self.0.to_string().as_bytes())?;
             Ok(())
         }
     }
@@ -104,7 +119,7 @@ mod tests {
 
     #[test]
     fn test_number() {
-        let number = Literal::int_number("123").unwrap();
+        let number = Literal::int_number(123).unwrap();
 
         let mut res = Vec::new();
 

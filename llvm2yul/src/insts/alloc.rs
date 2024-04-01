@@ -32,7 +32,7 @@ impl<'a> AllocaCompiler<'a> {
 
         let value = FunctionCall {
             name: Ident::new("__yul_allocate")?,
-            args: vec![Literal::int_number(format!("{}", total_size))?.into()],
+            args: vec![Literal::int_number(total_size)?.into()],
         }
         .into();
 

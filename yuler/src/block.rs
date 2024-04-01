@@ -64,7 +64,7 @@ pub(crate) mod block_tests {
     pub(crate) fn build_inline_block() -> Result<InlineBlock> {
         let st = VariableDeclare {
             names: vec![Ident::new("i")?],
-            value: Literal::int_number("0")?.into(),
+            value: Literal::int_number(0)?.into(),
         }
         .into();
 

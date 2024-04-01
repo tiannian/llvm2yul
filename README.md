@@ -77,8 +77,8 @@ Replace function call into builtin
     9. [X] Int2Ptr
 - [X] Flatten LLVM IR Struct or Array
 - [ ] Map LLVM IR function call to yul.
-    - [ ] Use FFI function to map yul builtin function.
-    - [ ] allocate function as builtin function
+    - [X] Use FFI function to map yul builtin function.
+    - [X] allocate function as builtin function
 - [ ] Map block termiantor to control flow.
     - [ ] Ret (leave)
     - [ ] Br

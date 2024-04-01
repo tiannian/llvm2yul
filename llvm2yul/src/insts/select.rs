@@ -77,7 +77,7 @@ fn build_operand_value_for_select(operand: &Operand) -> Result<Value> {
         },
         // TODO: flatten constant
         Operand::ConstantOperand(constant) => match constant.as_ref() {
-            Constant::Int { bits: _, value } => Ok(Literal::int_number(format!("{value}"))?.into()),
+            Constant::Int { bits: _, value } => Ok(Literal::int_number(*value)?.into()),
             _ => Err(anyhow!("Unsupported constant type: {constant}")),
         },
         _ => Err(anyhow!("Unsupported operand for select: {operand}")),

@@ -40,6 +40,13 @@ impl Value {
             Self::FunctionCall(v) => v.write(w),
         }
     }
+
+    pub fn as_literal(&self) -> Option<&Literal> {
+        match self {
+            Value::Literal(v) => Some(v),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
