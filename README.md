@@ -26,7 +26,7 @@ In this step, llvm2yul will flat struct.
 ### Compile Block
 
 - Compile phi instruction
-- Compile call instruction. struct will be flatted
+- Compile call instruction. struct will be flatten
 - Compile load
 - Compile store
 - Compile select
