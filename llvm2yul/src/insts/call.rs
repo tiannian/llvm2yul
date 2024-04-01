@@ -9,6 +9,7 @@ pub struct CallCompiler<'a> {
     call: &'a Call,
     types: &'a Types,
     config: &'a Config,
+    pub(crate) object: Option<Ident>,
 }
 
 impl<'a> CallCompiler<'a> {
@@ -17,10 +18,12 @@ impl<'a> CallCompiler<'a> {
             call,
             config,
             types,
+
+            object: None,
         }
     }
 
-    pub fn compile_call(&self) -> Result<Statement> {
+    pub fn compile_call(&mut self) -> Result<Statement> {
         let (call_name, rets) = self.build_call_function_name_and_rets()?;
 
         // build function call name
@@ -43,7 +46,8 @@ impl<'a> CallCompiler<'a> {
             }
             .into());
         }
-        let res = convert_builtin(&mut func_call)?;
+
+        self.object = convert_builtin(&mut func_call)?;
 
         Ok(if rets.is_empty() {
             func_call.into()

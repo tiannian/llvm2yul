@@ -49,7 +49,7 @@ impl<'a> FunctionCompiler<'a> {
             for bb in &self.llvm_func.basic_blocks {
                 log::debug!("Compile block: {}", bb.name);
 
-                let block_compiler = BlockCompiler::new(bb, self.llvm_types, self.config);
+                let mut block_compiler = BlockCompiler::new(bb, self.llvm_types, self.config);
 
                 let block = block_compiler.compile()?;
 

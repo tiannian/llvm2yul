@@ -4,7 +4,7 @@ use llvm_ir::{
     types::Types,
     BasicBlock, Instruction,
 };
-use yuler::Statement;
+use yuler::{Ident, Statement};
 
 use crate::{
     AllocaCompiler, CallCompiler, Config, ExtractValueCompiler, PtrIntCompiler, SelectCompiler,
@@ -14,6 +14,7 @@ pub struct BlockCompiler<'a> {
     bb: &'a BasicBlock,
     llvm_types: &'a Types,
     config: &'a Config,
+    objects: Vec<Ident>,
 }
 
 impl<'a> BlockCompiler<'a> {
@@ -22,10 +23,12 @@ impl<'a> BlockCompiler<'a> {
             bb,
             llvm_types,
             config,
+
+            objects: Vec::new(),
         }
     }
 
-    pub fn compile(&self) -> Result<Vec<Statement>> {
+    pub fn compile(&mut self) -> Result<Vec<Statement>> {
         let mut stmts = Vec::new();
 
         for inst in &self.bb.instrs {
@@ -36,7 +39,7 @@ impl<'a> BlockCompiler<'a> {
         Ok(stmts)
     }
 
-    pub fn compile_inst(&self, inst: &Instruction) -> Result<Vec<Statement>> {
+    pub fn compile_inst(&mut self, inst: &Instruction) -> Result<Vec<Statement>> {
         let res = match inst {
             Instruction::ExtractValue(i) => self.compile_extract_value(i)?,
             Instruction::InsertValue(i) => self.compile_insert_value(i)?,
@@ -56,10 +59,16 @@ impl<'a> BlockCompiler<'a> {
         Ok(vec![])
     }
 
-    fn compile_call(&self, call: &Call) -> Result<Vec<Statement>> {
-        let compiler = CallCompiler::new(call, self.llvm_types, self.config);
+    fn compile_call(&mut self, call: &Call) -> Result<Vec<Statement>> {
+        let mut compiler = CallCompiler::new(call, self.llvm_types, self.config);
 
-        Ok(vec![compiler.compile_call()?])
+        let stmt = compiler.compile_call()?;
+
+        if let Some(object) = compiler.object {
+            self.objects.push(object);
+        }
+
+        Ok(vec![stmt])
     }
 
     fn compile_alloca(&self, inst: &Alloca) -> Result<Vec<Statement>> {
