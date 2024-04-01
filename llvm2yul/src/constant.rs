@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use llvm_ir::{types::Types, Constant, Type};
 use yuler::{Literal, Value};
 
-use crate::{error, Config, TypeFlatter};
+use crate::{error, utils, Config, TypeFlatter};
 
 pub struct ConstantFlatter<'a> {
     types: &'a Types,
@@ -48,6 +48,11 @@ impl<'a> ConstantFlatter<'a> {
             }
             Constant::Undef(ty) => self._build_type_values(values, ty)?,
             Constant::Poison(ty) => self._build_type_values(values, ty)?,
+            Constant::PtrToInt(i) => self._flatten(values, &i.operand)?,
+            Constant::IntToPtr(i) => self._flatten(values, &i.operand)?,
+            Constant::GlobalReference { name, ty: _ } => {
+                values.push(Literal::ascii(utils::yul_ident_name(name))?.into())
+            }
             _ => {
                 return Err(anyhow!(
                     "{} constant flatten: {}",

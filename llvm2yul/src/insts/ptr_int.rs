@@ -15,7 +15,7 @@ impl<'a> PtrIntCompiler<'a> {
     }
 
     pub fn compile(&self) -> Result<Vec<Statement>> {
-        let dest = Ident::new(utils::yul_ident_name(&self.dest))?;
+        let dest = Ident::new(utils::yul_ident_name(self.dest))?;
 
         let value: Value = match &self.operand {
             Operand::LocalOperand { name, ty: _ } => {

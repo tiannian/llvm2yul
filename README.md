@@ -68,11 +68,13 @@ Replace function call into builtin
 - [ ] Map LLVM IR Constant to yul
     1. [X] Int
     2. [X] Null
-    3. [ ] AggregateZero
+    3. [X] AggregateZero
     4. [X] Struct
     5. [X] Array
     6. [X] GlobalReference
     7. [X] Poison
+    8. [X] Ptr2Int
+    9. [X] Int2Ptr
 - [X] Flatten LLVM IR Struct or Array
 - [ ] Map LLVM IR function call to yul.
     - [ ] Use FFI function to map yul builtin function.

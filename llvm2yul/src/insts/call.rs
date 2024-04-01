@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use llvm_ir::{instruction::Call, types::Types, Constant, Operand, Type};
 use yuler::{FunctionCall, Ident, Literal, Statement, Value, VariableDeclare};
 
-use crate::{utils, Config, TypeFlatter};
+use crate::{utils, Config, ConstantFlatter, TypeFlatter};
 
 pub struct CallCompiler<'a> {
     call: &'a Call,
@@ -87,7 +87,7 @@ impl<'a> CallCompiler<'a> {
         let mut res = Vec::new();
 
         for (arg, _) in &self.call.arguments {
-            res.push(build_function_arg_from_llvm_directly(arg)?);
+            res.push(self.build_function_arg_from_llvm_directly(arg)?);
         }
 
         Ok(res)
@@ -107,7 +107,7 @@ impl<'a> CallCompiler<'a> {
                     }
                 }
                 Operand::ConstantOperand(constant) => {
-                    res.push(build_function_arg_from_constant(constant)?);
+                    res.append(&mut self.build_function_arg_from_constant(constant)?);
                 }
                 _ => return Err(anyhow!("Unsupported function parameter for function call")),
             }
@@ -115,44 +115,25 @@ impl<'a> CallCompiler<'a> {
 
         Ok(res)
     }
-}
 
-fn build_function_arg_from_llvm_directly(arg: &Operand) -> Result<Value> {
-    match arg {
-        Operand::LocalOperand { name, ty: _ } => {
-            Ok(Ident::new(utils::yul_ident_name(name))?.into())
-        }
-        Operand::ConstantOperand(constant) => build_function_arg_from_constant(constant),
-        _ => Err(anyhow!(
-            "Unsupported function paramter for builtin function"
-        )),
-    }
-}
-
-fn build_function_arg_from_constant(constant: &Constant) -> Result<Value> {
-    let arg = match constant {
-        Constant::Int { bits: _, value } => Literal::int_number(format!("{value}"))?.into(),
-        Constant::GlobalReference { name, ty } => match ty.as_ref() {
-            Type::StructType {
-                element_types,
-                is_packed: _,
-            } => {
-                if !element_types.is_empty() {
-                    return Err(anyhow!("No supported struct"));
-                }
-                Literal::int_number("0")?.into()
+    fn build_function_arg_from_llvm_directly(&self, arg: &Operand) -> Result<Value> {
+        match arg {
+            Operand::LocalOperand { name, ty: _ } => {
+                Ok(Ident::new(utils::yul_ident_name(name))?.into())
             }
-            Type::FuncType {
-                result_type: _,
-                param_types: _,
-                is_var_arg: _,
-            } => Literal::ascii(utils::yul_ident_name(name))?.into(),
-            _ => return Err(anyhow!("Unknown global reference type: {constant:?}")),
-        },
-        Constant::Null(_) => Literal::int_number("0")?.into(),
-        Constant::IntToPtr(i) => build_function_arg_from_constant(&i.operand)?,
-        _ => return Err(anyhow!("Unsupported constant: {constant:?}")),
-    };
+            Operand::ConstantOperand(constant) => {
+                let v = self.build_function_arg_from_constant(constant)?.remove(0);
+                Ok(v)
+            }
+            _ => Err(anyhow!(
+                "Unsupported function paramter for builtin function"
+            )),
+        }
+    }
 
-    Ok(arg)
+    fn build_function_arg_from_constant(&self, constant: &Constant) -> Result<Vec<Value>> {
+        let flatter = ConstantFlatter::new(self.types, self.config);
+
+        flatter.flatten(constant)
+    }
 }
