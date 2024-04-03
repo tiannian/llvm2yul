@@ -8,6 +8,56 @@ If you want to build using LLVM frontend, please use corresponding language stan
 
 - Rust: [patine](https://github.com/tiannian/patine)
 
+## Build
+
+### Install llvm
+
+Many platfrom can't get prebuilt binary library for LLVM.
+So we suggested compile LLVM manaully. Please refer [llvm-sys](https://crates.io/crates/llvm-sys#compiling-llvm)
+documentation to build it.
+
+### Compile
+
+```
+export LLVM_SYS_170_PREFIX=<path-to-llvm-directory>
+cargo build
+```
+
+## Usage and Test
+
+> Use rust example. Follow these instructions to build testable LLVM IR file.
+
+1. Clone patine repo
+
+```
+git clone https://github.com/tiannian/patine
+```
+
+2. Build store example
+
+```
+RUSTFLAGS="--emit=llvm-ir" cargo build --release --example=store
+```
+
+3. Link llvm
+
+```
+llvm-link target/release/deps/patine_core-*.ll \
+          target/release/deps/patine_std-*.ll \
+          target/release/examples/store-*.ll \
+          -o store.dc
+llvm-dis store.dc
+```
+
+4. Copy `store.dc.ll` to `llvm2yul` directory.
+
+5. Compile this repo.
+
+```
+export LLVM_SYS_170_PREFIX=<path-to-llvm-directory>
+RUST_LOG=llvm2yul=debug cargo r --example=compiler
+```
+
 ## Passes Design
 
 ### Compile Object
