@@ -46,6 +46,7 @@ impl<'a> FunctionCompiler<'a> {
         let mut objects = Vec::new();
 
         let mut blocks = BTreeMap::new();
+        let mut llvm_blocks = BTreeMap::new();
         // Compile all blocks
         {
             for bb in &self.llvm_func.basic_blocks {
@@ -59,11 +60,19 @@ impl<'a> FunctionCompiler<'a> {
                     objects.push(obj);
                 }
 
-                blocks.insert(utils::yul_ident_name(&bb.name), block);
+                let name = utils::yul_ident_name(&bb.name);
+
+                blocks.insert(name.clone(), block);
+                llvm_blocks.insert(name, bb);
             }
         }
 
         // Compile termiantor
+        {
+            for (name, block) in &blocks {}
+        }
+
+        // Build function
         let func = {
             let function_analysis = FunctionAnalysis::new(self.llvm_func);
             let control_flow = function_analysis.control_flow_graph();
