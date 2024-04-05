@@ -18,7 +18,7 @@ documentation to build it.
 
 ### Compile
 
-```
+```bash
 export LLVM_SYS_170_PREFIX=<path-to-llvm-directory>
 cargo build
 ```
@@ -29,19 +29,19 @@ cargo build
 
 1. Clone patine repo
 
-```
+```bash
 git clone https://github.com/tiannian/patine
 ```
 
 2. Build store example
 
-```
+```bash
 RUSTFLAGS="--emit=llvm-ir" cargo build --release --example=store
 ```
 
 3. Link llvm
 
-```
+```bash
 llvm-link target/release/deps/patine_core-*.ll \
           target/release/deps/patine_std-*.ll \
           target/release/examples/store-*.ll \
@@ -53,7 +53,7 @@ llvm-dis store.dc
 
 5. Compile this repo.
 
-```
+```bash
 export LLVM_SYS_170_PREFIX=<path-to-llvm-directory>
 RUST_LOG=llvm2yul=debug cargo r --example=compiler
 ```
