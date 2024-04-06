@@ -78,10 +78,30 @@ Array also will expand to a sequence of Yul variables. But if the element of arr
 
 ### Operate Instructions
 
-## Structure
+Only a subset of LLVM IR instructions are supported. They will be represent as Yul's statement. Not all LLVM IR instructions supported, each error-handling instructions, float instructions and arithmetic instructions are not supported.
+
+Since arithmetic instructions are not supported, all arithmetic operations need to use builtin functions.
+
+- ExtractValue
+- InsertValue
+- Alloca
+- Load
+- Store
+- PtrToInt
+- IntToPtr
+- Phi
+- Select
+
+## Code Structure
 
 ### Function Declaration
 
 ### Block
 
 ### Terminator and Flow Control
+
+## Builtin Function
+
+Builtin function will map to yul EVM dialect function. But them will be add a prefix `__yul_`. For example, `add` function will be `__yul_add`.
+
+These builtin functions will add or remove following the changes of yul compiler.
