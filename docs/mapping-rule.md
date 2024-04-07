@@ -70,15 +70,36 @@ Array also will expand to a sequence of Yul variables. But if the element of arr
 
 ### Basic Literal
 
+Basic literal only have these type. They will be treated as a plain `u256`.
+
+- Integer
+- Null
+- Undef
+- Poison
+
+### Integer
+
+Integer Constant Value in LLVM IR will direct convert into Yul number. 
+
+But the constant integer in LLVM IR only have u64 type. To construct `u256`, `__yul_ext_literal`'s parameters will merge into one `u256`.
+
+### Null, Undef and Posion
+
+Beacuse of the value of Yul will be initiated as `0`, so Null, Undef and Posion constant value are presented as `0`.
+
 ### Aggregate Literal
+
+### Literal with Instruction
 
 ## Instructions
 
 ### Function Call
 
+If function is builtin function, all parameters will be treated as basic type. If function is not builtin function, parameters will be flatten.
+
 ### Operate Instructions
 
-Only a subset of LLVM IR instructions are supported. They will be represent as Yul's statement. Not all LLVM IR instructions supported, each error-handling instructions, float instructions and arithmetic instructions are not supported.
+Only a subset of LLVM IR instructions are supported. They will be represent as Yul's statement. Not all LLVM IR instructions supported, error-handling instructions, float instructions and arithmetic instructions are not supported.
 
 Since arithmetic instructions are not supported, all arithmetic operations need to use builtin functions.
 
@@ -87,6 +108,7 @@ Since arithmetic instructions are not supported, all arithmetic operations need 
 - Alloca
 - Load
 - Store
+- GetElementPtr
 - PtrToInt
 - IntToPtr
 - Phi
