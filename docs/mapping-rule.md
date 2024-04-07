@@ -81,7 +81,9 @@ Basic literal only have these type. They will be treated as a plain `u256`.
 
 Integer Constant Value in LLVM IR will direct convert into Yul number. 
 
-But the constant integer in LLVM IR only have u64 type. To construct `u256`, `__yul_ext_literal`'s parameters will merge into one `u256`.
+But the constant integer in LLVM IR only have `u64` type. To construct `u256`, `__yul_ext_literal(u64, u64, u64, u64)`'s parameters will merge into one `u256`.
+
+`__yul_ext_literal(u64, u64, u64, u64) -> u64` is just a fake function, it will convert a single literal.
 
 ### Null, Undef and Posion
 
