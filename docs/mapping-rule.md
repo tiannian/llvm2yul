@@ -6,6 +6,16 @@ This document describes how to compile LLVM IR to Yul.
 
 LLVM IR have rich type system. But Yul only have one type `u256`. So a mapping rule is needed between them.
 
+Most modern programming languages ​​do not provide integers up to 256 bits, and 64-bit integers in Yul are treated as 256-bit integers. Therefore, u64 can be used instead of u256 in programming languages ​​to avoid complex type merging operations.
+
+For example, use the following type to explain `U256` in Rust:
+
+```rust
+#[repr(C)]
+#[repr(align(32))]
+pub struct U256(u64)
+```
+
 ### Basic Type
 
 For now, only a subset of LLVM IT first class type are supported. Since Yul only supports u256, all floating-point related types and vector related types are not supported. This means `llvm2yul` only supported these following basic LLVM IR type.
