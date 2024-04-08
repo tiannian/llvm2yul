@@ -87,7 +87,7 @@ Basic literal only have these type. They will be treated as a plain `u256`.
 - Undef
 - Poison
 
-### Integer
+#### Integer
 
 Integer Constant Value in LLVM IR will direct convert into Yul number. 
 
@@ -95,13 +95,28 @@ But the constant integer in LLVM IR only have `u64` type. To construct `u256`, `
 
 `__yul_ext_literal(u64, u64, u64, u64) -> u64` is just a fake function, it will convert a single literal.
 
-### Null, Undef and Posion
+Considering that languages ​​like C do not have complex macro support, there are two functions:
+
+- `__yul_ext_literal(u64, u64, u64, u64)`
+- `__yul_ext_literal_str(str)`
+
+#### Null, Undef and Posion
 
 Beacuse of the value of Yul will be initiated as `0`, so Null, Undef and Posion constant value are presented as `0`.
 
 ### Aggregate Literal
 
+These literal of aggregate are support:
+
+- AggregateZero
+- Struct
+- Array
+
+These types will be flatten. The flatten rule is same as aggregate type.
+
 ### Literal with Instruction
+
+### Global Reference
 
 ## Instructions
 
