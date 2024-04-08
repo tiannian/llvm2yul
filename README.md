@@ -13,7 +13,7 @@ If you want to build using LLVM frontend, please use corresponding language stan
 ### Install llvm
 
 Many platfrom can't get prebuilt binary library for LLVM.
-So we suggested compile LLVM manaully. Please refer [llvm-sys](https://crates.io/crates/llvm-sys#compiling-llvm)
+So we suggested compile LLVM manually. Please refer [llvm-sys](https://crates.io/crates/llvm-sys#compiling-llvm)
 documentation to build it.
 
 ### Compile
