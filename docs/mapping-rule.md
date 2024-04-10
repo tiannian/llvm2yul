@@ -18,7 +18,7 @@ pub struct U256(u64)
 
 ### Basic Type
 
-For now, only a subset of LLVM IT first class type are supported. Since Yul only supports u256, all floating-point related types and vector related types are not supported. This means `llvm2yul` only supported these following basic LLVM IR type.
+Since Yul only supports u256, all floating-point related types and vector related types are not supported. This means `llvm2yul` only supported these following basic LLVM IR type.
 
 - Void
 - Integer
@@ -41,7 +41,7 @@ There are also many types of pointer types in LLVM IR. However, no matter how co
 
 Since Yul does not support function pointers, all function pointers used as parameters and return values ​​will result in errors.
 
-However, when the function pointer is used as a parameter of `datacopy` and `dataoffse`t, it will be converted to a string literal.
+However, when the function pointer is used as a parameter of `datacopy` and `dataoffset`, it will be converted to a string literal.
 
 ### Aggregate Type
 
@@ -114,9 +114,13 @@ These literal of aggregate are support:
 
 These types will be flatten. The flatten rule is same as aggregate type.
 
-### Literal with Instruction
+### Constant with Instruction
+
+Some constant in LLVM IR is an instruction. These type of constant will convert into single value directly.
 
 ### Global Reference
+
+Global Reference will add into data section, then access these value using `datacopy` to load data.
 
 ## Instructions
 
