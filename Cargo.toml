@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["llvm2yul", "yuler"]
+members = ["llvm2yul", "yuler", "yullc"]
 exclude = ["examples"]
 
 [workspace.dependencies]
