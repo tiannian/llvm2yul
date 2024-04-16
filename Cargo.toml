@@ -6,5 +6,6 @@ exclude = ["examples"]
 
 [workspace.dependencies]
 yuler = { version = "0.1", path = "./yuler" }
+llvm2yul = { version = "0.1", path = "./llvm2yul" }
 
 anyhow = "1.0.81"

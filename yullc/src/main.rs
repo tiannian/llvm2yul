@@ -1,3 +1,11 @@
+use clap::Parser;
+
+mod args;
+mod version;
+pub use version::*;
+
 fn main() {
-    println!("Hello, world!");
+    let args = args::Args::parse();
+
+    args.execute().unwrap();
 }

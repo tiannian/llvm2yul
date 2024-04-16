@@ -5,6 +5,16 @@ pub struct Config {
     pub basic_types: BTreeSet<String>,
 }
 
+impl Config {
+    pub fn basic_types(mut self, bt: &[String]) -> Self {
+        for b in bt {
+            self.basic_types.insert(b.into());
+        }
+
+        self
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         let mut basic_types = BTreeSet::new();

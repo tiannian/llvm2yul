@@ -1,6 +1,6 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, path::Path};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use llvm_ir::{types::Types, Function, Module};
 use llvm_ir_analysis::ModuleAnalysis;
 use yuler::{FunctionCall, FunctionDefinition, Ident, Object};
@@ -16,7 +16,14 @@ pub struct Compiler {
 }
 
 impl Compiler {
-    pub fn compile_function(
+    pub fn new(config: Config) -> Self {
+        Self {
+            config,
+            ..Default::default()
+        }
+    }
+
+    fn compile_function(
         &mut self,
         llvm_func: &Function,
         llvm_types: &Types,
@@ -26,6 +33,20 @@ impl Compiler {
         func_compiler.compile_function_header()?;
 
         func_compiler.compile_function_body()
+    }
+
+    pub fn compile_object_from_bitcode(&mut self, path: &Path, entry: &str) -> Result<Object> {
+        let module =
+            Module::from_bc_path(path).map_err(|e| anyhow!("Failed to open module: {}", e))?;
+
+        self.compile_object(&module, entry)
+    }
+
+    pub fn compile_object_from_textir(&mut self, path: &Path, entry: &str) -> Result<Object> {
+        let module =
+            Module::from_ir_path(path).map_err(|e| anyhow!("Failed to open module: {}", e))?;
+
+        self.compile_object(&module, entry)
     }
 
     pub fn compile_object(&mut self, module: &Module, entry: &str) -> Result<Object> {
@@ -50,8 +71,6 @@ impl Compiler {
                     log::debug!("Compile function: {}", func.name);
 
                     let (function, objects) = self.compile_function(func, &module.types)?;
-
-                    println!("{objects:?}");
 
                     object.code.0.push(function.into());
 
