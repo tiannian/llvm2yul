@@ -158,3 +158,5 @@ Since arithmetic instructions are not supported, all arithmetic operations need 
 Builtin function will map to yul EVM dialect function. But them will be add a prefix `__yul_`. For example, `add` function will be `__yul_add`.
 
 These builtin functions will add or remove following the changes of yul compiler.
+
+### Supported function
