@@ -144,6 +144,7 @@ Since arithmetic instructions are not supported, all arithmetic operations need 
 - IntToPtr
 - Phi
 - Select
+- All Integer Related Operations
 
 ## Code Structure
 
