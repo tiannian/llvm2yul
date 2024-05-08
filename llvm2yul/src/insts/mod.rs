@@ -15,3 +15,6 @@ pub use alloc::*;
 
 mod ptr_int;
 pub use ptr_int::*;
+
+mod get_element_ptr;
+pub use get_element_ptr::*;

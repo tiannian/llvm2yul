@@ -213,14 +213,18 @@ fn convert_builtin(function_call: &mut FunctionCall) -> Result<()> {
 
     match name.as_str() {
         "__yul__ext_literal" => {}
-        // "__yul_datasize" => {
-        //     // function_call.name.0 = "datasize".into();
-        //     // return Ok(Some());
-        // }
-        // "__yul_dataoffset" => {
-        //     function_call.name.0 = "dataoffset".into();
-        //     return Ok(Some(name));
-        // }
+        "__yul_datasize" => {
+            function_call.name.0 = "datasize".into();
+        }
+        "__yul_dataoffset" => {
+            function_call.name.0 = "dataoffset".into();
+        }
+        "__yul_objectsize" => {
+            function_call.name.0 = "datasize".into();
+        }
+        "__yul_objectoffset" => {
+            function_call.name.0 = "dataoffset".into();
+        }
         _ => {
             if let Some(num_args) = utils::builtin_args_num(&name) {
                 if function_call.args.len() != num_args {

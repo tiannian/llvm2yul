@@ -2,14 +2,17 @@ use std::collections::BTreeSet;
 
 use anyhow::{anyhow, Result};
 use llvm_ir::{
-    instruction::{Alloca, Call, ExtractValue, InsertValue, IntToPtr, Phi, PtrToInt, Select},
+    instruction::{
+        Alloca, Call, ExtractValue, GetElementPtr, InsertValue, IntToPtr, Phi, PtrToInt, Select,
+    },
     types::Types,
     BasicBlock, Instruction,
 };
 use yuler::Statement;
 
 use crate::{
-    AllocaCompiler, CallCompiler, Config, ExtractValueCompiler, PtrIntCompiler, SelectCompiler,
+    AllocaCompiler, CallCompiler, Config, ExtractValueCompiler, GetElementPtrCompiler,
+    PtrIntCompiler, SelectCompiler,
 };
 
 pub struct BlockCompiler<'a> {
@@ -51,6 +54,7 @@ impl<'a> BlockCompiler<'a> {
             Instruction::Select(i) => self.compile_select(i)?,
             Instruction::IntToPtr(i) => self.compile_int2ptr(i)?,
             Instruction::PtrToInt(i) => self.compile_ptr2int(i)?,
+            Instruction::GetElementPtr(i) => self.compile_get_element_ptr(i)?,
             _ => return Err(anyhow!("Unsupported instruction: {}", inst)),
         };
 
@@ -104,6 +108,11 @@ impl<'a> BlockCompiler<'a> {
     fn compile_ptr2int(&self, inst: &PtrToInt) -> Result<Vec<Statement>> {
         let compiler = PtrIntCompiler::new(&inst.operand, &inst.dest);
 
+        compiler.compile()
+    }
+
+    fn compile_get_element_ptr(&self, inst: &GetElementPtr) -> Result<Vec<Statement>> {
+        let compiler = GetElementPtrCompiler::new(inst);
         compiler.compile()
     }
 }
